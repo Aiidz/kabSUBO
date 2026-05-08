@@ -130,18 +130,6 @@ A server function `recommendPlaces({ query, userLat, userLng })`:
 
 ---
 
-## Build Phases
-
-- [ ] **Phase 1** — Foundation: Lovable Cloud schema, RLS, seed data
-- [ ] **Phase 2** — Map + prompt UI: home route, floating card, pin popups, geolocation
-- [ ] **Phase 3** — Recommendation flow: server function, results panel, place detail
-- [ ] **Phase 4** — Auth + submissions: sign in/up, submit flow, "my submissions"
-- [ ] **Phase 5** — Admin moderation: pending queue, approve/reject, editor
-- [ ] **Phase 6** — Comparison feature: multi-select, compare view, weighted winner
-- [ ] **Phase 7** — Reviews + favorites: ratings, saved list, polish
-
----
-
 ## Contributing
 
 Contributions are welcome! Open an issue or submit a pull request.
