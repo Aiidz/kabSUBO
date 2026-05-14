@@ -10,6 +10,7 @@ import {
   Search,
 } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { FormEvent, useMemo, useState } from "react";
 import {
   campusCenter,
@@ -221,7 +222,6 @@ export function KabsuboHome() {
           directionsPlaceId={directionsPlaceId}
           routeInfo={routeInfo}
           routeStatus={routeStatus}
-          onSelectPlace={setSelectedPlaceId}
           onGetDirections={handleGetDirections}
         />
       )}
@@ -394,7 +394,6 @@ function RecommendationsPanel({
   directionsPlaceId,
   routeInfo,
   routeStatus,
-  onSelectPlace,
   onGetDirections,
 }: {
   results: Array<RankedPlace & { distanceKm: number; openNow: boolean }>;
@@ -403,7 +402,6 @@ function RecommendationsPanel({
   directionsPlaceId: string | null;
   routeInfo: RouteInfo | null;
   routeStatus: RouteStatus;
-  onSelectPlace: (placeId: string) => void;
   onGetDirections: (placeId: string) => void;
 }) {
   return (
@@ -478,14 +476,13 @@ function RecommendationsPanel({
               </div>
 
               <div className="mt-4 grid grid-cols-3 gap-2">
-                <button
-                  type="button"
-                  onClick={() => onSelectPlace(place.id)}
+                <Link
+                  href={`/place/${place.id}`}
                   className="inline-flex h-10 items-center justify-center gap-1 rounded-md border border-black/10 bg-white px-2 text-[11px] font-bold text-[#171714] transition hover:border-[#1f6f53]"
                 >
                   <Eye size={14} aria-hidden="true" />
                   View details
-                </button>
+                </Link>
                 <button
                   type="button"
                   className="inline-flex h-10 items-center justify-center gap-1 rounded-md border border-black/10 bg-white px-2 text-[11px] font-bold text-[#171714] transition hover:border-[#1f6f53]"

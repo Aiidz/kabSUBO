@@ -378,7 +378,7 @@ function MapcnMarkerPopup({ place }: { place: FoodPlace }) {
           ))}
         </div>
         <div className="food-popup-actions">
-          <button type="button">View details</button>
+          <a href={`/place/${place.id}`}>View details</a>
           <button type="button">Add to compare</button>
           <button type="button" className="is-primary">
             Get directions

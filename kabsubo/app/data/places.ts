@@ -14,12 +14,23 @@ export type FoodPlace = {
   menuHighlights: string[];
   menuItems: Array<{
     name: string;
+    category: string;
+    price: number;
+    isBestSeller?: boolean;
     tags: string[];
   }>;
   bestSeller: {
     name: string;
     imageUrl: string;
   };
+  contact: string;
+  submittedBy: string;
+  recentReviews: Array<{
+    author: string;
+    rating: number;
+    body: string;
+    date: string;
+  }>;
   status: "approved" | "sample";
 };
 
@@ -51,15 +62,48 @@ export const foodPlaces: FoodPlace[] = [
     tags: ["rice meal", "grill", "sisig", "budget", "lunch"],
     menuHighlights: ["Pork sisig", "Chicken barbecue", "Silog meals"],
     menuItems: [
-      { name: "Pork sisig", tags: ["sisig", "rice meal", "lunch"] },
-      { name: "Chicken barbecue", tags: ["grill", "budget", "rice meal"] },
-      { name: "Silog meals", tags: ["breakfast", "budget", "egg"] },
+      {
+        name: "Pork sisig",
+        category: "Rice meals",
+        price: 95,
+        isBestSeller: true,
+        tags: ["sisig", "rice meal", "lunch"],
+      },
+      {
+        name: "Chicken barbecue",
+        category: "Grilled",
+        price: 85,
+        isBestSeller: true,
+        tags: ["grill", "budget", "rice meal"],
+      },
+      {
+        name: "Silog meals",
+        category: "Breakfast",
+        price: 70,
+        tags: ["breakfast", "budget", "egg"],
+      },
     ],
     bestSeller: {
       name: "Pork sisig",
       imageUrl:
         "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=240&q=80",
     },
+    contact: "0917 555 0148",
+    submittedBy: "Bongalos",
+    recentReviews: [
+      {
+        author: "Mika",
+        rating: 5,
+        body: "Reliable lunch spot after lab. Sisig serving is generous.",
+        date: "May 2026",
+      },
+      {
+        author: "Renz",
+        rating: 4,
+        body: "Chicken barbecue is good for the price and quick to serve.",
+        date: "May 2026",
+      },
+    ],
     status: "approved",
   },
   {
@@ -77,15 +121,47 @@ export const foodPlaces: FoodPlace[] = [
     tags: ["noodles", "mami", "siomai", "snack", "soup"],
     menuHighlights: ["Beef mami", "Siomai rice", "Pancit canton"],
     menuItems: [
-      { name: "Beef mami", tags: ["noodles", "mami", "soup"] },
-      { name: "Siomai rice", tags: ["siomai", "rice meal", "budget"] },
-      { name: "Pancit canton", tags: ["noodles", "snack", "merienda"] },
+      {
+        name: "Beef mami",
+        category: "Noodles",
+        price: 90,
+        isBestSeller: true,
+        tags: ["noodles", "mami", "soup"],
+      },
+      {
+        name: "Siomai rice",
+        category: "Rice meals",
+        price: 65,
+        tags: ["siomai", "rice meal", "budget"],
+      },
+      {
+        name: "Pancit canton",
+        category: "Snacks",
+        price: 55,
+        tags: ["noodles", "snack", "merienda"],
+      },
     ],
     bestSeller: {
       name: "Beef mami",
       imageUrl:
         "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=240&q=80",
     },
+    contact: "0918 410 2285",
+    submittedBy: "Gaano",
+    recentReviews: [
+      {
+        author: "Ella",
+        rating: 4,
+        body: "Good soup option on rainy days. Siomai rice is filling.",
+        date: "May 2026",
+      },
+      {
+        author: "Josh",
+        rating: 4,
+        body: "Affordable and close enough for short breaks.",
+        date: "April 2026",
+      },
+    ],
     status: "approved",
   },
   {
@@ -103,15 +179,48 @@ export const foodPlaces: FoodPlace[] = [
     tags: ["coffee", "pastry", "dessert", "study", "wifi"],
     menuHighlights: ["Iced latte", "Cheesecake cup", "Tuna melt"],
     menuItems: [
-      { name: "Iced latte", tags: ["coffee", "iced", "study"] },
-      { name: "Cheesecake cup", tags: ["dessert", "pastry", "sweet"] },
-      { name: "Tuna melt", tags: ["sandwich", "snack", "study"] },
+      {
+        name: "Iced latte",
+        category: "Coffee",
+        price: 120,
+        isBestSeller: true,
+        tags: ["coffee", "iced", "study"],
+      },
+      {
+        name: "Cheesecake cup",
+        category: "Desserts",
+        price: 110,
+        isBestSeller: true,
+        tags: ["dessert", "pastry", "sweet"],
+      },
+      {
+        name: "Tuna melt",
+        category: "Sandwiches",
+        price: 145,
+        tags: ["sandwich", "snack", "study"],
+      },
     ],
     bestSeller: {
       name: "Iced latte",
       imageUrl:
         "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=240&q=80",
     },
+    contact: "greencup@example.test",
+    submittedBy: "Legaspi",
+    recentReviews: [
+      {
+        author: "Aira",
+        rating: 5,
+        body: "Best study cafe nearby. Iced latte is consistent.",
+        date: "May 2026",
+      },
+      {
+        author: "Nico",
+        rating: 4,
+        body: "Quiet enough for group work and the cheesecake cup is worth it.",
+        date: "April 2026",
+      },
+    ],
     status: "approved",
   },
   {
@@ -129,18 +238,55 @@ export const foodPlaces: FoodPlace[] = [
     tags: ["burger", "fries", "snack", "budget", "merienda"],
     menuHighlights: ["Cheese burger", "Loaded fries", "Milktea"],
     menuItems: [
-      { name: "Cheese burger", tags: ["burger", "snack", "budget"] },
-      { name: "Loaded fries", tags: ["fries", "snack", "sharing"] },
-      { name: "Milktea", tags: ["drink", "sweet", "merienda"] },
+      {
+        name: "Cheese burger",
+        category: "Burgers",
+        price: 55,
+        isBestSeller: true,
+        tags: ["burger", "snack", "budget"],
+      },
+      {
+        name: "Loaded fries",
+        category: "Snacks",
+        price: 75,
+        isBestSeller: true,
+        tags: ["fries", "snack", "sharing"],
+      },
+      {
+        name: "Milktea",
+        category: "Drinks",
+        price: 65,
+        tags: ["drink", "sweet", "merienda"],
+      },
     ],
     bestSeller: {
       name: "Cheese burger",
       imageUrl:
         "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=240&q=80",
     },
+    contact: "0920 110 7712",
+    submittedBy: "Santos",
+    recentReviews: [
+      {
+        author: "Bea",
+        rating: 4,
+        body: "Good burger for merienda. Loaded fries are better shared.",
+        date: "May 2026",
+      },
+      {
+        author: "Carlo",
+        rating: 4,
+        body: "Quick stop before commuting. Prices are student-friendly.",
+        date: "April 2026",
+      },
+    ],
     status: "approved",
   },
 ];
+
+export function getFoodPlaceById(placeId: string) {
+  return foodPlaces.find((place) => place.id === placeId);
+}
 
 export type RankedPlace = FoodPlace & {
   matchScore: number;
