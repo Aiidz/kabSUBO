@@ -7,6 +7,7 @@ import {
   LocateFixed,
   MapPin,
   Plus,
+  Scale,
   Search,
 } from "lucide-react";
 import Image from "next/image";
@@ -53,6 +54,7 @@ export function KabsuboHome() {
   );
   const [routeStatus, setRouteStatus] = useState<RouteStatus>("idle");
   const [routeInfo, setRouteInfo] = useState<RouteInfo | null>(null);
+  const [compareIds, setCompareIds] = useState<string[]>([]);
 
   const usableUserLocation = locationState === "found" ? userLocation : null;
   const origin = usableUserLocation ?? campusCenter;
@@ -107,6 +109,20 @@ export function KabsuboHome() {
     setDirectionsPlaceId(null);
     setRouteInfo(null);
     setRouteStatus("idle");
+  }
+
+  function handleToggleCompare(placeId: string) {
+    setCompareIds((currentIds) => {
+      if (currentIds.includes(placeId)) {
+        return currentIds.filter((currentId) => currentId !== placeId);
+      }
+
+      if (currentIds.length >= 4) {
+        return currentIds;
+      }
+
+      return [...currentIds, placeId];
+    });
   }
 
   function setCampusFallback() {
@@ -222,6 +238,8 @@ export function KabsuboHome() {
           directionsPlaceId={directionsPlaceId}
           routeInfo={routeInfo}
           routeStatus={routeStatus}
+          compareIds={compareIds}
+          onToggleCompare={handleToggleCompare}
           onGetDirections={handleGetDirections}
         />
       )}
@@ -394,6 +412,8 @@ function RecommendationsPanel({
   directionsPlaceId,
   routeInfo,
   routeStatus,
+  compareIds,
+  onToggleCompare,
   onGetDirections,
 }: {
   results: Array<RankedPlace & { distanceKm: number; openNow: boolean }>;
@@ -402,8 +422,15 @@ function RecommendationsPanel({
   directionsPlaceId: string | null;
   routeInfo: RouteInfo | null;
   routeStatus: RouteStatus;
+  compareIds: string[];
+  onToggleCompare: (placeId: string) => void;
   onGetDirections: (placeId: string) => void;
 }) {
+  const compareHref = `/compare?${new URLSearchParams({
+    ids: compareIds.join(","),
+    q: query,
+  }).toString()}`;
+
   return (
     <aside className="absolute inset-x-3 bottom-3 z-20 max-h-[52vh] overflow-y-auto rounded-lg border border-white/55 bg-white/86 p-4 shadow-2xl backdrop-blur-xl lg:inset-y-6 lg:left-auto lg:right-6 lg:w-[450px] lg:max-h-none">
       <div className="sticky top-0 z-10 -mx-4 -mt-4 border-b border-black/10 bg-white/90 px-4 py-4 backdrop-blur-xl">
@@ -418,6 +445,26 @@ function RecommendationsPanel({
         <p className="mt-1 text-sm font-semibold text-black/55">
           Distances are measured from {originLabel}.
         </p>
+        {compareIds.length > 0 && (
+          <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-md border border-[#1f6f53]/20 bg-[#eef7ef] px-3 py-2">
+            <p className="text-sm font-black text-[#185840]">
+              {compareIds.length}/4 selected for compare
+            </p>
+            {compareIds.length >= 2 ? (
+              <Link
+                href={compareHref}
+                className="inline-flex h-9 items-center justify-center gap-2 rounded-md bg-[#171714] px-3 text-xs font-bold text-white transition hover:bg-[#2a2822]"
+              >
+                <Scale size={14} aria-hidden="true" />
+                Open compare
+              </Link>
+            ) : (
+              <span className="text-xs font-bold uppercase tracking-[0.14em] text-[#7b3320]">
+                Pick one more
+              </span>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="mt-4 space-y-3">
@@ -429,11 +476,16 @@ function RecommendationsPanel({
             </p>
           </div>
         ) : (
-          results.map((place, index) => (
-            <article
-              key={place.id}
-              className="rounded-lg border border-black/10 bg-white/78 p-4 shadow-sm"
-            >
+          results.map((place, index) => {
+            const isSelectedForCompare = compareIds.includes(place.id);
+            const compareLimitReached =
+              compareIds.length >= 4 && !isSelectedForCompare;
+
+            return (
+              <article
+                key={place.id}
+                className="rounded-lg border border-black/10 bg-white/78 p-4 shadow-sm"
+              >
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#7b3320]">
@@ -485,10 +537,16 @@ function RecommendationsPanel({
                 </Link>
                 <button
                   type="button"
-                  className="inline-flex h-10 items-center justify-center gap-1 rounded-md border border-black/10 bg-white px-2 text-[11px] font-bold text-[#171714] transition hover:border-[#1f6f53]"
+                  onClick={() => onToggleCompare(place.id)}
+                  disabled={compareLimitReached}
+                  className={`inline-flex h-10 items-center justify-center gap-1 rounded-md border px-2 text-[11px] font-bold transition ${
+                    isSelectedForCompare
+                      ? "border-[#1f6f53] bg-[#eef7ef] text-[#185840]"
+                      : "border-black/10 bg-white text-[#171714] hover:border-[#1f6f53] disabled:cursor-not-allowed disabled:opacity-45"
+                  }`}
                 >
                   <Plus size={14} aria-hidden="true" />
-                  Add to compare
+                  {isSelectedForCompare ? "Added" : "Add to compare"}
                 </button>
                 <button
                   type="button"
@@ -519,8 +577,9 @@ function RecommendationsPanel({
                   {routeStatus === "error" && "Route is unavailable right now."}
                 </div>
               )}
-            </article>
-          ))
+              </article>
+            );
+          })
         )}
       </div>
     </aside>

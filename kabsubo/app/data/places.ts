@@ -16,6 +16,7 @@ export type FoodPlace = {
     name: string;
     category: string;
     price: number;
+    prepNote?: string;
     isBestSeller?: boolean;
     tags: string[];
   }>;
@@ -66,6 +67,7 @@ export const foodPlaces: FoodPlace[] = [
         name: "Pork sisig",
         category: "Rice meals",
         price: 95,
+        prepNote: "Cooked on order and best with plain rice.",
         isBestSeller: true,
         tags: ["sisig", "rice meal", "lunch"],
       },
@@ -73,6 +75,7 @@ export const foodPlaces: FoodPlace[] = [
         name: "Chicken barbecue",
         category: "Grilled",
         price: 85,
+        prepNote: "Grilled in lunch batches for a short wait.",
         isBestSeller: true,
         tags: ["grill", "budget", "rice meal"],
       },
@@ -80,6 +83,7 @@ export const foodPlaces: FoodPlace[] = [
         name: "Silog meals",
         category: "Breakfast",
         price: 70,
+        prepNote: "Fast breakfast plate with egg and garlic rice.",
         tags: ["breakfast", "budget", "egg"],
       },
     ],
@@ -125,6 +129,7 @@ export const foodPlaces: FoodPlace[] = [
         name: "Beef mami",
         category: "Noodles",
         price: 90,
+        prepNote: "Served hot and ideal for rainy class breaks.",
         isBestSeller: true,
         tags: ["noodles", "mami", "soup"],
       },
@@ -132,12 +137,14 @@ export const foodPlaces: FoodPlace[] = [
         name: "Siomai rice",
         category: "Rice meals",
         price: 65,
+        prepNote: "Quick rice bowl with steamed siomai.",
         tags: ["siomai", "rice meal", "budget"],
       },
       {
         name: "Pancit canton",
         category: "Snacks",
         price: 55,
+        prepNote: "Made as a quick merienda order.",
         tags: ["noodles", "snack", "merienda"],
       },
     ],
@@ -183,6 +190,7 @@ export const foodPlaces: FoodPlace[] = [
         name: "Iced latte",
         category: "Coffee",
         price: 120,
+        prepNote: "Prepared cold with low wait outside peak hours.",
         isBestSeller: true,
         tags: ["coffee", "iced", "study"],
       },
@@ -190,6 +198,7 @@ export const foodPlaces: FoodPlace[] = [
         name: "Cheesecake cup",
         category: "Desserts",
         price: 110,
+        prepNote: "Chilled cup dessert from a limited daily batch.",
         isBestSeller: true,
         tags: ["dessert", "pastry", "sweet"],
       },
@@ -197,6 +206,7 @@ export const foodPlaces: FoodPlace[] = [
         name: "Tuna melt",
         category: "Sandwiches",
         price: 145,
+        prepNote: "Toasted after ordering; better for longer breaks.",
         tags: ["sandwich", "snack", "study"],
       },
     ],
@@ -242,6 +252,7 @@ export const foodPlaces: FoodPlace[] = [
         name: "Cheese burger",
         category: "Burgers",
         price: 55,
+        prepNote: "Made to order on the griddle.",
         isBestSeller: true,
         tags: ["burger", "snack", "budget"],
       },
@@ -249,6 +260,7 @@ export const foodPlaces: FoodPlace[] = [
         name: "Loaded fries",
         category: "Snacks",
         price: 75,
+        prepNote: "Best for sharing; sauce is added before serving.",
         isBestSeller: true,
         tags: ["fries", "snack", "sharing"],
       },
@@ -256,6 +268,7 @@ export const foodPlaces: FoodPlace[] = [
         name: "Milktea",
         category: "Drinks",
         price: 65,
+        prepNote: "Prepared cold and easy to carry between classes.",
         tags: ["drink", "sweet", "merienda"],
       },
     ],

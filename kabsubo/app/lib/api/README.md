@@ -45,6 +45,19 @@ Prefer returning data wrapped in a `data` property:
 
 The frontend client also accepts raw JSON for simple PHP scripts.
 
+Menu item records should include:
+
+```json
+{
+  "name": "Cheese burger",
+  "category": "Burgers",
+  "price": 55,
+  "prepNote": "Made to order on the griddle.",
+  "isBestSeller": true,
+  "tags": ["burger", "snack", "budget"]
+}
+```
+
 ## PHP Backend Notes
 
 - Use PDO prepared statements.
