@@ -73,7 +73,7 @@ BEGIN
 
     -- Log the submission in the audit table
     INSERT INTO submissions_audit (place_id, actor_id, action, notes)
-    VALUES (new_place_id, p_submitted_by, 'submitted', 'Submitted via stored procedure.');
+    VALUES (new_place_id, p_submitted_by, 'pending', 'Submitted via stored procedure.');
 
     COMMIT;
 END//
