@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS profiles (
 CREATE TABLE IF NOT EXISTS user_roles (
     id      CHAR(36) PRIMARY KEY DEFAULT (UUID()),
     user_id CHAR(36) NOT NULL,
-    role    ENUM('admin', 'moderator', 'user') NOT NULL DEFAULT 'user',
+    role    VARCHAR(20) NOT NULL DEFAULT 'user',
     FOREIGN KEY (user_id) REFERENCES profiles(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS places (
     id           CHAR(36)      PRIMARY KEY DEFAULT (UUID()),
     name         VARCHAR(255)  NOT NULL,
     slug         VARCHAR(255)  NOT NULL,
-    type         ENUM('restaurant', 'shop', 'stall', 'diner') NOT NULL,
+    type         VARCHAR(50) NOT NULL,
     description  TEXT,
     lat          DECIMAL(9,6),
     lng          DECIMAL(9,6),
@@ -47,7 +47,7 @@ CREATE TABLE IF NOT EXISTS places (
     photo_urls   JSON,
     contact      VARCHAR(100),
     submitted_by CHAR(36),
-    status       ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
+    status       VARCHAR(20) DEFAULT 'pending',
     created_at   TIMESTAMP    DEFAULT CURRENT_TIMESTAMP,
     updated_at   TIMESTAMP    DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (submitted_by) REFERENCES profiles(id) ON DELETE SET NULL
