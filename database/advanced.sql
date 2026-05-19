@@ -23,6 +23,10 @@ BEGIN
             '\\s+', '-'
         )
     );
+
+    IF NEW.slug = '' THEN
+        SET NEW.slug = LOWER(UUID());
+    END IF;
 END//
 
 DELIMITER ;

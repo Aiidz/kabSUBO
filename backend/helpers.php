@@ -39,3 +39,13 @@ function get_param(string $key, mixed $default = null): mixed
 {
     return $_GET[$key] ?? $default;
 }
+
+function decode_json_string(?string $value, string $default = ''): string
+{
+    if ($value === null || $value === '') {
+        return $default;
+    }
+
+    $decoded = json_decode($value, true);
+    return is_string($decoded) ? $decoded : $value;
+}

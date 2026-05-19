@@ -9,18 +9,15 @@ $method = get_method();
 $id     = get_param('id');
 $db     = get_db();
 
-use PDO;
-use PDOException;
-
-// ... (rest stays the same)
-
-match ($method) {
+if (basename($_SERVER['SCRIPT_FILENAME']) === 'places.php') {
+    match ($method) {
     'GET'    => $id ? get_place($db, $id) : list_places($db),
     'POST'   => create_place($db),
     'PUT'    => update_place($db, $id),
     'DELETE' => delete_place($db, $id),
     default  => error_response('Method not allowed', 405),
 };
+}
 
 // ----------------------------------------------------------------
 
@@ -64,7 +61,7 @@ function create_place(PDO $db): void
         $body['lat'] ?? $body['coordinates'][1] ?? null,
         $body['lng'] ?? $body['coordinates'][0] ?? null,
         $body['address'] ?? null,
-        $body['hours'] ?? null,
+        isset($body['hours']) ? json_encode($body['hours']) : null,
         $body['priceRange'] ?? null,
         $body['contact'] ?? null,
         $body['submittedBy'] ?? null,
@@ -105,13 +102,16 @@ function update_place(PDO $db, ?string $id): void
         'lng'         => 'lng',
         'address'     => 'address',
         'hours_json'  => 'hours',
+        'photo_urls'  => 'photoUrls',
         'price_range' => 'priceRange',
         'contact'     => 'contact',
         'status'      => 'status',
     ] as $col => $key) {
         if (array_key_exists($key, $body)) {
             $fields[] = "$col = ?";
-            $params[] = $body[$key];
+            $params[] = ($col === 'hours_json')
+                ? json_encode($body[$key])
+                : (in_array($col, ['photo_urls']) ? json_encode($body[$key]) : $body[$key]);
         }
     }
 
@@ -155,7 +155,7 @@ function format_place(array $place): array
     $review_cnt  = get_review_count($place['id']);
     $menu_items  = get_menu_items($place['id']);
     $reviews     = get_recent_reviews($place['id']);
-    $best_seller = get_best_seller($menu_items);
+    $best_seller = get_best_seller($menu_items, $place['photo_urls'] ?? null);
 
     return [
         'id'             => $place['id'],
@@ -168,7 +168,7 @@ function format_place(array $place): array
         'rating'         => (float) $avg_rating,
         'reviews'        => (int) $review_cnt,
         'walkTime'       => estimate_walk_time($place['lat'], $place['lng']),
-        'hours'          => $place['hours_json'] ?? '',
+        'hours'          => decode_json_string($place['hours_json'] ?? ''),
         'tags'           => extract_tags($menu_items),
         'menuHighlights' => array_slice(array_map(fn($m) => $m['name'], $menu_items), 0, 3),
         'menuItems'      => $menu_items,
@@ -240,20 +240,29 @@ function get_recent_reviews(string $place_id): array
     }, $rows);
 }
 
-function get_best_seller(array $menu_items): array
+function get_best_seller(array $menu_items, ?string $photoUrlsJson = null): array
 {
+    $imageUrl = '';
+
+    if ($photoUrlsJson) {
+        $photos = json_decode($photoUrlsJson, true);
+        if (is_array($photos) && !empty($photos)) {
+            $imageUrl = is_string($photos[0]) ? $photos[0] : '';
+        }
+    }
+
     foreach ($menu_items as $item) {
         if ($item['isBestSeller']) {
             return [
                 'name'     => $item['name'],
-                'imageUrl' => '',
+                'imageUrl' => $imageUrl,
             ];
         }
     }
 
     return [
         'name'     => $menu_items[0]['name'] ?? '',
-        'imageUrl' => '',
+        'imageUrl' => $imageUrl,
     ];
 }
 
