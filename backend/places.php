@@ -23,9 +23,33 @@ if (basename($_SERVER['SCRIPT_FILENAME']) === 'places.php') {
 
 function list_places(PDO $db): void
 {
-    $places = $db->query(
-        "SELECT * FROM places ORDER BY created_at DESC"
-    )->fetchAll();
+    $status   = get_param('status');
+    $query    = get_param('query');
+    $wheres   = [];
+    $params   = [];
+
+    if ($status) {
+        $wheres[] = 'status = ?';
+        $params[] = $status;
+    }
+
+    if ($query) {
+        $wheres[] = '(name LIKE ? OR description LIKE ? OR type LIKE ?)';
+        $like     = '%' . $query . '%';
+        $params[] = $like;
+        $params[] = $like;
+        $params[] = $like;
+    }
+
+    $sql = 'SELECT * FROM places';
+    if ($wheres) {
+        $sql .= ' WHERE ' . implode(' AND ', $wheres);
+    }
+    $sql .= ' ORDER BY created_at DESC';
+
+    $stmt  = $db->prepare($sql);
+    $stmt->execute($params);
+    $places = $stmt->fetchAll();
 
     json_response(array_map('format_place', $places));
 }
@@ -49,8 +73,8 @@ function create_place(PDO $db): void
     $id = generate_uuid_v4();
 
     $stmt = $db->prepare(
-        "INSERT INTO places (id, name, type, description, lat, lng, address, hours_json, price_range, contact, submitted_by, status)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')"
+        "INSERT INTO places (id, name, type, description, lat, lng, address, hours_json, price_range, photo_urls, contact, submitted_by, status)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')"
     );
 
     $stmt->execute([
@@ -63,6 +87,7 @@ function create_place(PDO $db): void
         $body['address'] ?? null,
         isset($body['hours']) ? json_encode($body['hours']) : null,
         $body['priceRange'] ?? null,
+        isset($body['photoUrls']) ? json_encode($body['photoUrls']) : null,
         $body['contact'] ?? null,
         $body['submittedBy'] ?? null,
     ]);

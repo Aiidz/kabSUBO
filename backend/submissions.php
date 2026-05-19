@@ -48,8 +48,8 @@ function create_submission(PDO $db): void
     $auditId = generate_uuid_v4();
 
     $stmt = $db->prepare(
-        "INSERT INTO submissions_audit (id, place_id, actor_id, action, notes)
-         VALUES (?, ?, ?, 'submitted', 'Pending review')"
+         "INSERT INTO submissions_audit (id, place_id, actor_id, action, notes)
+         VALUES (?, ?, ?, 'pending', 'Pending review')"
     );
     $stmt->execute([$auditId, $placeId, $submittedBy]);
 
@@ -146,8 +146,8 @@ function create_place_from_body(PDO $db, array $body): string
     $id = generate_uuid_v4();
 
     $stmt = $db->prepare(
-        "INSERT INTO places (id, name, type, description, lat, lng, address, hours_json, price_range, contact, submitted_by, status)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')"
+        "INSERT INTO places (id, name, type, description, lat, lng, address, hours_json, price_range, photo_urls, contact, submitted_by, status)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')"
     );
 
     $stmt->execute([
@@ -158,8 +158,9 @@ function create_place_from_body(PDO $db, array $body): string
         $body['lat'] ?? $body['coordinates'][1] ?? null,
         $body['lng'] ?? $body['coordinates'][0] ?? null,
         $body['address'] ?? null,
-        $body['hours'] ?? null,
+        isset($body['hours']) ? json_encode($body['hours']) : null,
         $body['priceRange'] ?? null,
+        isset($body['photoUrls']) ? json_encode($body['photoUrls']) : null,
         $body['contact'] ?? null,
         $body['submittedBy'] ?? null,
     ]);

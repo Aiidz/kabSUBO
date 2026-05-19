@@ -67,11 +67,11 @@ INSERT IGNORE INTO reviews (place_id, user_id, rating, body) VALUES
 -- Submissions Audit (initial approval for all 4)
 -- ============================================================
 INSERT IGNORE INTO submissions_audit (place_id, actor_id, action, notes) VALUES
-    ('place-main-gate-grill', 'user-bongalos', 'submitted', 'Initial submission.'),
-    ('place-main-gate-grill', 'user-bongalos', 'approved',  'Auto-approved during seed.'),
-    ('place-indang-noodle',   'user-gaano',    'submitted', 'Initial submission.'),
-    ('place-indang-noodle',   'user-gaano',    'approved',  'Auto-approved during seed.'),
-    ('place-green-cup-cafe',  'user-legaspi',  'submitted', 'Initial submission.'),
-    ('place-green-cup-cafe',  'user-legaspi',  'approved',  'Auto-approved during seed.'),
-    ('place-campus-burger',   'user-santos',   'submitted', 'Initial submission.'),
-    ('place-campus-burger',   'user-santos',   'approved',  'Auto-approved during seed.');
+    ('place-main-gate-grill', 'user-bongalos', 'pending',  'Initial submission.'),
+    ('place-main-gate-grill', 'user-bongalos', 'approved', 'Auto-approved during seed.'),
+    ('place-indang-noodle',   'user-gaano',    'pending',  'Initial submission.'),
+    ('place-indang-noodle',   'user-gaano',    'approved', 'Auto-approved during seed.'),
+    ('place-green-cup-cafe',  'user-legaspi',  'pending',  'Initial submission.'),
+    ('place-green-cup-cafe',  'user-legaspi',  'approved', 'Auto-approved during seed.'),
+    ('place-campus-burger',   'user-santos',   'pending',  'Initial submission.'),
+    ('place-campus-burger',   'user-santos',   'approved', 'Auto-approved during seed.');
