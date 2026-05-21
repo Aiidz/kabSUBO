@@ -54,13 +54,17 @@ export default async function PlaceDetailPage({ params }: PlacePageProps) {
   return (
     <main className="min-h-screen bg-[#f6f3ec] text-[#171714]">
       <section className="relative min-h-[420px] overflow-hidden bg-[#171714] text-white">
-        <Image
-          src={place.bestSeller.imageUrl}
-          alt={place.bestSeller.name}
-          fill
-          priority
-          className="object-cover opacity-55"
-        />
+        {place.bestSeller.imageUrl ? (
+          <Image
+            src={place.bestSeller.imageUrl}
+            alt={place.bestSeller.name}
+            fill
+            priority
+            className="object-cover opacity-55"
+          />
+        ) : (
+          <div className="absolute inset-0 bg-gradient-to-br from-[#2a1a0e] via-[#1f1a17] to-[#171714]" />
+        )}
         <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/35 to-black/10" />
         <div className="relative z-10 mx-auto flex min-h-[420px] max-w-6xl flex-col justify-end px-5 py-8">
           <Link
@@ -127,8 +131,8 @@ export default async function PlaceDetailPage({ params }: PlacePageProps) {
           <section className="rounded-lg border border-black/10 bg-white/82 p-5 shadow-sm">
             <h2 className="text-2xl font-black">Recent Reviews</h2>
             <div className="mt-4 grid gap-3">
-              {place.recentReviews.map((review) => (
-                <article key={`${review.author}-${review.date}`} className="rounded-lg bg-[#fffaf0] p-4">
+              {place.recentReviews.map((review, i) => (
+                <article key={`${review.author}-${review.rating}-${i}`} className="rounded-lg bg-[#fffaf0] p-4">
                   <div className="flex items-center justify-between gap-3">
                     <p className="font-black">{review.author}</p>
                     <span className="inline-flex items-center gap-1 text-sm font-black text-[#7b3320]">
