@@ -4,11 +4,11 @@
 -- Based on ADBMS project ERD + frontend data model
 -- ============================================================
 
-CREATE DATABASE IF NOT EXISTS kabsupo
+CREATE DATABASE IF NOT EXISTS kabsubo
   CHARACTER SET utf8mb4
   COLLATE utf8mb4_unicode_ci;
 
-USE kabsupo;
+USE kabsubo;
 
 -- ============================================================
 -- 1. profiles — user profile linked to authentication

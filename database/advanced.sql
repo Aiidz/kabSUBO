@@ -4,7 +4,7 @@
 -- ADBMS class requirements
 -- ============================================================
 
-USE kabsupo;
+USE kabsubo;
 
 -- ============================================================
 -- 1. TRIGGER: Auto-generate slug from place name

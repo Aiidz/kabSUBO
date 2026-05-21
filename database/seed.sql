@@ -3,7 +3,7 @@
 -- 4 demo places matching the frontend's hardcoded data
 -- ============================================================
 
-USE kabsupo;
+USE kabsubo;
 
 -- ============================================================
 -- Profiles (submitters)
