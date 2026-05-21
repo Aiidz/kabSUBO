@@ -24,15 +24,28 @@ function list_reviews(PDO $db, ?string $placeId): void
         error_response('place_id is required', 400);
     }
 
+    $limit  = (int) get_param('limit', 5);
+    $offset = (int) get_param('offset', 0);
+
+    if ($limit < 1) {
+        $limit = 5;
+    }
+    if ($offset < 0) {
+        $offset = 0;
+    }
+
     $stmt = $db->prepare(
         "SELECT r.*, p.display_name
          FROM reviews r
          JOIN profiles p ON p.id = r.user_id
          WHERE r.place_id = ?
          ORDER BY r.created_at DESC
-         LIMIT 5"
+         LIMIT ? OFFSET ?"
     );
-    $stmt->execute([$placeId]);
+    $stmt->bindValue(1, $placeId, PDO::PARAM_STR);
+    $stmt->bindValue(2, $limit, PDO::PARAM_INT);
+    $stmt->bindValue(3, $offset, PDO::PARAM_INT);
+    $stmt->execute();
     $rows = $stmt->fetchAll();
 
     json_response(array_map('format_review', $rows));
@@ -40,20 +53,19 @@ function list_reviews(PDO $db, ?string $placeId): void
 
 function create_review(PDO $db): void
 {
+    $userId = require_auth($db);
+
     $body = get_json_body();
     $placeId = $body['placeId'] ?? null;
-    $author  = $body['author'] ?? null;
 
-    if (!$placeId || !$author) {
-        error_response('placeId and author are required', 400);
+    if (!$placeId) {
+        error_response('placeId is required', 400);
     }
 
     $rating = (int) ($body['rating'] ?? 0);
     if ($rating < 1 || $rating > 5) {
         error_response('rating must be between 1 and 5', 422);
     }
-
-    $userId = resolve_user($db, $author);
 
     $stmt = $db->prepare(
         "INSERT INTO reviews (id, place_id, user_id, rating, body)
@@ -77,13 +89,25 @@ function create_review(PDO $db): void
 
 function update_review(PDO $db, ?string $placeId, ?string $author): void
 {
+    $loggedInUserId = require_auth($db);
+
     if (!$placeId || !$author) {
         error_response('place_id and author are required', 400);
     }
 
-    $body = get_json_body();
-    $userId = resolve_user($db, $author);
+    $stmt = $db->prepare("SELECT id FROM profiles WHERE display_name = ?");
+    $stmt->execute([$author]);
+    $targetUserId = $stmt->fetchColumn();
 
+    if (!$targetUserId) {
+        error_response('Review not found', 404);
+    }
+
+    if ($loggedInUserId !== $targetUserId) {
+        error_response('Forbidden: You can only update your own reviews', 403);
+    }
+
+    $body = get_json_body();
     $fields = [];
     $params = [];
 
@@ -105,17 +129,19 @@ function update_review(PDO $db, ?string $placeId, ?string $author): void
         error_response('No fields to update', 400);
     }
 
+    $existsStmt = $db->prepare("SELECT 1 FROM reviews WHERE place_id = ? AND user_id = ?");
+    $existsStmt->execute([$placeId, $targetUserId]);
+    if (!$existsStmt->fetchColumn()) {
+        error_response('Review not found', 404);
+    }
+
     $params[] = $placeId;
-    $params[] = $userId;
+    $params[] = $targetUserId;
 
     $stmt = $db->prepare(
         "UPDATE reviews SET " . implode(', ', $fields) . " WHERE place_id = ? AND user_id = ?"
     );
     $stmt->execute($params);
-
-    if ($stmt->rowCount() === 0) {
-        error_response('Review not found', 404);
-    }
 
     $stmt = $db->prepare(
         "SELECT r.*, p.display_name
@@ -123,7 +149,7 @@ function update_review(PDO $db, ?string $placeId, ?string $author): void
          JOIN profiles p ON p.id = r.user_id
          WHERE r.place_id = ? AND r.user_id = ?"
     );
-    $stmt->execute([$placeId, $userId]);
+    $stmt->execute([$placeId, $targetUserId]);
     $review = $stmt->fetch();
 
     json_response(format_review($review));
@@ -131,14 +157,39 @@ function update_review(PDO $db, ?string $placeId, ?string $author): void
 
 function delete_review(PDO $db, ?string $placeId, ?string $author): void
 {
+    $loggedInUserId = require_auth($db);
+
     if (!$placeId || !$author) {
         error_response('place_id and author are required', 400);
     }
 
-    $userId = resolve_user($db, $author);
+    $stmt = $db->prepare("SELECT id FROM profiles WHERE display_name = ?");
+    $stmt->execute([$author]);
+    $targetUserId = $stmt->fetchColumn();
+
+    if (!$targetUserId) {
+        error_response('Review not found', 404);
+    }
+
+    if ($loggedInUserId !== $targetUserId) {
+        $roleStmt = $db->prepare("SELECT role FROM user_roles WHERE user_id = ?");
+        $roleStmt->execute([$loggedInUserId]);
+        $role = $roleStmt->fetchColumn();
+        $isAdminOrMod = $role && in_array($role, ['admin', 'moderator'], true);
+
+        if (!$isAdminOrMod) {
+            error_response('Forbidden: You can only delete your own reviews', 403);
+        }
+    }
+
+    $existsStmt = $db->prepare("SELECT 1 FROM reviews WHERE place_id = ? AND user_id = ?");
+    $existsStmt->execute([$placeId, $targetUserId]);
+    if (!$existsStmt->fetchColumn()) {
+        error_response('Review not found', 404);
+    }
 
     $stmt = $db->prepare("DELETE FROM reviews WHERE place_id = ? AND user_id = ?");
-    $stmt->execute([$placeId, $userId]);
+    $stmt->execute([$placeId, $targetUserId]);
 
     json_response(['ok' => true]);
 }

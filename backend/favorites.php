@@ -6,24 +6,20 @@ require_once __DIR__ . '/db_config.php';
 require_once __DIR__ . '/helpers.php';
 require_once __DIR__ . '/places.php';
 
-$method  = get_method();
-$userId  = get_param('user_id');
-$placeId = get_param('place_id');
 $db      = get_db();
+$method  = get_method();
+$userId  = require_auth($db);
+$placeId = get_param('place_id');
 
 match ($method) {
     'GET'    => list_favorites($db, $userId),
-    'POST'   => add_favorite($db),
+    'POST'   => add_favorite($db, $userId),
     'DELETE' => remove_favorite($db, $userId, $placeId),
     default  => error_response('Method not allowed', 405),
 };
 
-function list_favorites(PDO $db, ?string $userId): void
+function list_favorites(PDO $db, string $userId): void
 {
-    if (!$userId) {
-        error_response('user_id is required', 400);
-    }
-
     $stmt = $db->prepare(
         "SELECT p.* FROM places p
          JOIN favorites f ON f.place_id = p.id
@@ -33,17 +29,19 @@ function list_favorites(PDO $db, ?string $userId): void
     $stmt->execute([$userId]);
     $rows = $stmt->fetchAll();
 
-    json_response(array_map('format_place', $rows));
+    $placeIds = array_column($rows, 'id');
+    $batchData = prefetch_place_data($db, $placeIds);
+
+    json_response(array_map(fn($p) => format_place($p, $batchData), $rows));
 }
 
-function add_favorite(PDO $db): void
+function add_favorite(PDO $db, string $userId): void
 {
     $body   = get_json_body();
-    $userId = $body['userId'] ?? null;
     $placeId = $body['placeId'] ?? null;
 
-    if (!$userId || !$placeId) {
-        error_response('userId and placeId are required', 400);
+    if (!$placeId) {
+        error_response('placeId is required', 400);
     }
 
     $stmt = $db->prepare(
@@ -57,10 +55,10 @@ function add_favorite(PDO $db): void
     ]);
 }
 
-function remove_favorite(PDO $db, ?string $userId, ?string $placeId): void
+function remove_favorite(PDO $db, string $userId, ?string $placeId): void
 {
-    if (!$userId || !$placeId) {
-        error_response('user_id and place_id are required', 400);
+    if (!$placeId) {
+        error_response('place_id is required', 400);
     }
 
     $stmt = $db->prepare(

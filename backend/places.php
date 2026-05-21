@@ -51,7 +51,10 @@ function list_places(PDO $db): void
     $stmt->execute($params);
     $places = $stmt->fetchAll();
 
-    json_response(array_map('format_place', $places));
+    $placeIds = array_column($places, 'id');
+    $batchData = prefetch_place_data($db, $placeIds);
+
+    json_response(array_map(fn($p) => format_place($p, $batchData), $places));
 }
 
 function get_place(PDO $db, string $id): void
@@ -69,8 +72,16 @@ function get_place(PDO $db, string $id): void
 
 function create_place(PDO $db): void
 {
+    $userId = require_auth($db);
     $body = get_json_body();
     $id = generate_uuid_v4();
+
+    $photoUrls = null;
+    if (isset($body['photoUrls'])) {
+        $photoUrls = json_encode($body['photoUrls']);
+    } elseif (isset($body['bestSeller']['imageUrl'])) {
+        $photoUrls = json_encode([$body['bestSeller']['imageUrl']]);
+    }
 
     $stmt = $db->prepare(
         "INSERT INTO places (id, name, type, description, lat, lng, address, hours_json, price_range, photo_urls, contact, submitted_by, status)
@@ -87,9 +98,9 @@ function create_place(PDO $db): void
         $body['address'] ?? null,
         isset($body['hours']) ? json_encode($body['hours']) : null,
         $body['priceRange'] ?? null,
-        isset($body['photoUrls']) ? json_encode($body['photoUrls']) : null,
+        $photoUrls,
         $body['contact'] ?? null,
-        $body['submittedBy'] ?? null,
+        $userId,
     ]);
 
     if ($stmt->rowCount() === 0) {
@@ -111,6 +122,7 @@ function generate_uuid_v4(): string
 
 function update_place(PDO $db, ?string $id): void
 {
+    require_auth($db);
     if (!$id) {
         error_response('id is required', 400);
     }
@@ -123,11 +135,8 @@ function update_place(PDO $db, ?string $id): void
         'name'        => 'name',
         'type'        => 'type',
         'description' => 'description',
-        'lat'         => 'lat',
-        'lng'         => 'lng',
         'address'     => 'address',
         'hours_json'  => 'hours',
-        'photo_urls'  => 'photoUrls',
         'price_range' => 'priceRange',
         'contact'     => 'contact',
         'status'      => 'status',
@@ -136,7 +145,7 @@ function update_place(PDO $db, ?string $id): void
             $fields[] = "$col = ?";
             $params[] = ($col === 'hours_json')
                 ? json_encode($body[$key])
-                : (in_array($col, ['photo_urls']) ? json_encode($body[$key]) : $body[$key]);
+                : $body[$key];
         }
     }
 
@@ -145,6 +154,27 @@ function update_place(PDO $db, ?string $id): void
         $fields[] = 'lng = ?';
         $params[] = $body['coordinates'][1];
         $params[] = $body['coordinates'][0];
+    } else {
+        if (array_key_exists('lat', $body)) {
+            $fields[] = 'lat = ?';
+            $params[] = $body['lat'];
+        }
+        if (array_key_exists('lng', $body)) {
+            $fields[] = 'lng = ?';
+            $params[] = $body['lng'];
+        }
+    }
+
+    $photoUrls = null;
+    if (isset($body['photoUrls'])) {
+        $photoUrls = $body['photoUrls'];
+    } elseif (isset($body['bestSeller']['imageUrl'])) {
+        $photoUrls = [$body['bestSeller']['imageUrl']];
+    }
+
+    if ($photoUrls !== null) {
+        $fields[] = 'photo_urls = ?';
+        $params[] = json_encode($photoUrls);
     }
 
     if (empty($fields)) {
@@ -161,6 +191,7 @@ function update_place(PDO $db, ?string $id): void
 
 function delete_place(PDO $db, ?string $id): void
 {
+    require_auth($db);
     if (!$id) {
         error_response('id is required', 400);
     }
@@ -174,12 +205,21 @@ function delete_place(PDO $db, ?string $id): void
 // ----------------------------------------------------------------
 // Format helpers
 
-function format_place(array $place): array
+function format_place(array $place, ?array $batchData = null): array
 {
-    $avg_rating  = get_avg_rating($place['id']);
-    $review_cnt  = get_review_count($place['id']);
-    $menu_items  = get_menu_items($place['id']);
-    $reviews     = get_recent_reviews($place['id']);
+    $placeId = $place['id'];
+
+    if ($batchData !== null) {
+        $avg_rating  = $batchData['avg_ratings'][$placeId] ?? 0.0;
+        $review_cnt  = $batchData['review_counts'][$placeId] ?? 0;
+        $menu_items  = $batchData['menu_items'][$placeId] ?? [];
+        $reviews     = $batchData['recent_reviews'][$placeId] ?? [];
+    } else {
+        $avg_rating  = get_avg_rating($placeId);
+        $review_cnt  = get_review_count($placeId);
+        $menu_items  = get_menu_items($placeId);
+        $reviews     = get_recent_reviews($placeId);
+    }
     $best_seller = get_best_seller($menu_items, $place['photo_urls'] ?? null);
 
     return [
@@ -202,6 +242,89 @@ function format_place(array $place): array
         'submittedBy'    => $place['submitted_by'] ?? '',
         'recentReviews'  => $reviews,
         'status'         => $place['status'] ?? 'pending',
+    ];
+}
+
+function prefetch_place_data(PDO $db, array $placeIds): array
+{
+    if (empty($placeIds)) {
+        return [
+            'avg_ratings' => [],
+            'review_counts' => [],
+            'menu_items' => [],
+            'recent_reviews' => [],
+        ];
+    }
+
+    $placeholders = implode(',', array_fill(0, count($placeIds), '?'));
+
+    // 1. Fetch avg ratings and review counts from optimized view/database
+    $stmt = $db->prepare("SELECT id, avg_rating, review_count FROM place_summary_view WHERE id IN ($placeholders)");
+    $stmt->execute($placeIds);
+    $summaries = $stmt->fetchAll();
+
+    $avgRatings = [];
+    $reviewCounts = [];
+    foreach ($summaries as $row) {
+        $avgRatings[$row['id']] = (float) $row['avg_rating'];
+        $reviewCounts[$row['id']] = (int) $row['review_count'];
+    }
+
+    // 2. Fetch menu items in batch
+    $stmt = $db->prepare(
+        "SELECT * FROM menu_items 
+         WHERE place_id IN ($placeholders) 
+         ORDER BY is_best_seller DESC, created_at ASC"
+    );
+    $stmt->execute($placeIds);
+    $menuRows = $stmt->fetchAll();
+
+    $menuItems = [];
+    foreach ($placeIds as $id) {
+        $menuItems[$id] = [];
+    }
+    foreach ($menuRows as $row) {
+        $menuItems[$row['place_id']][] = [
+            'name'        => $row['name'],
+            'category'    => $row['category'] ?? '',
+            'price'       => (float) ($row['price'] ?? 0),
+            'prepNote'    => $row['description'] ?? '',
+            'isBestSeller' => (bool) $row['is_best_seller'],
+            'tags'        => json_decode($row['tags'] ?? '[]', true),
+        ];
+    }
+
+    // 3. Fetch recent reviews in batch using window function to limit to 5 per place
+    $stmt = $db->prepare(
+        "SELECT r.*, p.display_name,
+                ROW_NUMBER() OVER (PARTITION BY r.place_id ORDER BY r.created_at DESC) as rn
+         FROM reviews r
+         JOIN profiles p ON p.id = r.user_id
+         WHERE r.place_id IN ($placeholders)"
+    );
+    $stmt->execute($placeIds);
+    $reviewRows = $stmt->fetchAll();
+
+    $recentReviews = [];
+    foreach ($placeIds as $id) {
+        $recentReviews[$id] = [];
+    }
+    foreach ($reviewRows as $row) {
+        if ((int)$row['rn'] <= 5) {
+            $recentReviews[$row['place_id']][] = [
+                'author' => $row['display_name'],
+                'rating' => (int) $row['rating'],
+                'body'   => $row['body'] ?? '',
+                'date'   => date('F Y', strtotime($row['created_at'])),
+            ];
+        }
+    }
+
+    return [
+        'avg_ratings' => $avgRatings,
+        'review_counts' => $reviewCounts,
+        'menu_items' => $menuItems,
+        'recent_reviews' => $recentReviews,
     ];
 }
 

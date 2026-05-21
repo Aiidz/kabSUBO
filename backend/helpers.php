@@ -64,3 +64,45 @@ function decode_json_string(?string $value, string $default = ''): string
     $decoded = json_decode($value, true);
     return is_string($decoded) ? $decoded : $value;
 }
+
+function get_session_token(): ?string
+{
+    $auth = $_SERVER['HTTP_AUTHORIZATION']
+        ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION']
+        ?? '';
+
+    if (preg_match('/^Bearer\s+(.+)$/i', $auth, $m)) {
+        return $m[1];
+    }
+
+    return $_COOKIE['session_token'] ?? null;
+}
+
+function require_auth(PDO $db): string
+{
+    $token = get_session_token();
+    if (!$token) {
+        error_response('Unauthorized: Missing session token', 401);
+    }
+
+    $stmt = $db->prepare("SELECT user_id FROM sessions WHERE token = ?");
+    $stmt->execute([$token]);
+    $userId = $stmt->fetchColumn();
+
+    if (!$userId) {
+        error_response('Unauthorized: Invalid or expired session token', 401);
+    }
+
+    return $userId;
+}
+
+function require_role(PDO $db, string $userId, array $allowedRoles): void
+{
+    $stmt = $db->prepare("SELECT role FROM user_roles WHERE user_id = ?");
+    $stmt->execute([$userId]);
+    $role = $stmt->fetchColumn();
+
+    if (!$role || !in_array($role, $allowedRoles, true)) {
+        error_response('Forbidden: You do not have the required permissions', 403);
+    }
+}

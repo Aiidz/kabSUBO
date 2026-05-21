@@ -20,6 +20,8 @@ match ($method) {
 
 function list_submissions(PDO $db, ?string $status): void
 {
+    $userId = require_auth($db);
+    require_role($db, $userId, ['admin', 'moderator']);
     if ($status) {
         $stmt = $db->prepare(
             "SELECT * FROM submissions_audit WHERE action = ? ORDER BY created_at DESC"
@@ -38,20 +40,40 @@ function list_submissions(PDO $db, ?string $status): void
 
 function create_submission(PDO $db): void
 {
+    $userId = require_auth($db);
     $body = get_json_body();
 
-    // Create the place first
-    $placeId = create_place_from_body($db, $body);
-
-    // Create audit record
-    $submittedBy = $body['submittedBy'] ?? null;
+    $placeId = generate_uuid_v4();
     $auditId = generate_uuid_v4();
 
+    // Fallback image URL matching
+    $photoUrls = null;
+    if (isset($body['photoUrls'])) {
+        $photoUrls = json_encode($body['photoUrls']);
+    } elseif (isset($body['bestSeller']['imageUrl'])) {
+        $photoUrls = json_encode([$body['bestSeller']['imageUrl']]);
+    }
+
+    $submittedBy = $userId;
+
     $stmt = $db->prepare(
-         "INSERT INTO submissions_audit (id, place_id, actor_id, action, notes)
-         VALUES (?, ?, ?, 'pending', 'Pending review')"
+        "CALL submit_place_with_audit(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
     );
-    $stmt->execute([$auditId, $placeId, $submittedBy]);
+    $stmt->execute([
+        $placeId,
+        $auditId,
+        $body['name'] ?? null,
+        $body['type'] ?? null,
+        $body['lat'] ?? $body['coordinates'][1] ?? null,
+        $body['lng'] ?? $body['coordinates'][0] ?? null,
+        $body['address'] ?? null,
+        $submittedBy,
+        $body['description'] ?? null,
+        isset($body['hours']) ? json_encode($body['hours']) : null,
+        $body['priceRange'] ?? null,
+        $photoUrls,
+        $body['contact'] ?? null
+    ]);
 
     json_response([
         'id'          => $auditId,
@@ -63,6 +85,9 @@ function create_submission(PDO $db): void
 
 function update_submission(PDO $db, ?string $id): void
 {
+    $userId = require_auth($db);
+    require_role($db, $userId, ['admin', 'moderator']);
+
     if (!$id) {
         error_response('id is required', 400);
     }
@@ -131,6 +156,9 @@ function update_submission(PDO $db, ?string $id): void
 
 function delete_submission(PDO $db, ?string $id): void
 {
+    $userId = require_auth($db);
+    require_role($db, $userId, ['admin', 'moderator']);
+
     if (!$id) {
         error_response('id is required', 400);
     }
@@ -141,32 +169,7 @@ function delete_submission(PDO $db, ?string $id): void
     json_response(['ok' => true]);
 }
 
-function create_place_from_body(PDO $db, array $body): string
-{
-    $id = generate_uuid_v4();
-
-    $stmt = $db->prepare(
-        "INSERT INTO places (id, name, type, description, lat, lng, address, hours_json, price_range, photo_urls, contact, submitted_by, status)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')"
-    );
-
-    $stmt->execute([
-        $id,
-        $body['name'] ?? null,
-        $body['type'] ?? null,
-        $body['description'] ?? null,
-        $body['lat'] ?? $body['coordinates'][1] ?? null,
-        $body['lng'] ?? $body['coordinates'][0] ?? null,
-        $body['address'] ?? null,
-        isset($body['hours']) ? json_encode($body['hours']) : null,
-        $body['priceRange'] ?? null,
-        isset($body['photoUrls']) ? json_encode($body['photoUrls']) : null,
-        $body['contact'] ?? null,
-        $body['submittedBy'] ?? null,
-    ]);
-
-    return $id;
-}
+// create_place_from_body removed in favor of stored procedure submit_place_with_audit
 
 function format_submission(array $row): array
 {

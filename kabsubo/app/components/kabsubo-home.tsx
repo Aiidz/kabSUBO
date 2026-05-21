@@ -696,6 +696,9 @@ function isOpenNow(hours: string) {
   const openMinutes = toMinutes(match[1], match[2], match[3]);
   const closeMinutes = toMinutes(match[4], match[5], match[6]);
 
+  if (closeMinutes < openMinutes) {
+    return currentMinutes >= openMinutes || currentMinutes <= closeMinutes;
+  }
   return currentMinutes >= openMinutes && currentMinutes <= closeMinutes;
 }
 

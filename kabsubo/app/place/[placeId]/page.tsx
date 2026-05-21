@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { PlaceInsetMap } from "@/app/components/place-inset-map";
 import {
   campusCenter,
+  foodPlaces,
   type FoodPlace,
 } from "@/app/data/places";
 import { placesApi } from "@/app/lib/api/kabsubo-api";
@@ -16,16 +17,31 @@ type PlacePageProps = {
 };
 
 export async function generateStaticParams() {
-  const places = await placesApi.listApproved();
-
-  return places.data.map((place) => ({
-    placeId: place.id,
-  }));
+  try {
+    const places = await placesApi.listApproved();
+    return places.data.map((place) => ({
+      placeId: place.id,
+    }));
+  } catch (error) {
+    console.warn("PHP API server is offline during generateStaticParams. Falling back to static seed data.", error);
+    return foodPlaces.map((place) => ({
+      placeId: place.id,
+    }));
+  }
 }
 
 export async function generateMetadata({ params }: PlacePageProps) {
   const { placeId } = await params;
-  const place = await placesApi.get(placeId).catch(() => null);
+  let place: { data: FoodPlace } | null = null;
+  try {
+    place = await placesApi.get(placeId);
+  } catch (error) {
+    console.warn(`PHP API server offline for metadata of place ${placeId}. Trying local seed fallback.`, error);
+    const staticPlace = foodPlaces.find((p) => p.id === placeId);
+    if (staticPlace) {
+      place = { data: staticPlace };
+    }
+  }
 
   if (!place) {
     return {
@@ -41,7 +57,17 @@ export async function generateMetadata({ params }: PlacePageProps) {
 
 export default async function PlaceDetailPage({ params }: PlacePageProps) {
   const { placeId } = await params;
-  const result = await placesApi.get(placeId).catch(() => null);
+  let result: { data: FoodPlace } | null = null;
+
+  try {
+    result = await placesApi.get(placeId);
+  } catch (error) {
+    console.warn(`PHP API server offline for place detail ${placeId}. Trying local seed fallback.`, error);
+    const staticPlace = foodPlaces.find((p) => p.id === placeId);
+    if (staticPlace) {
+      result = { data: staticPlace };
+    }
+  }
 
   if (!result) {
     notFound();

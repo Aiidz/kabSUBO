@@ -170,24 +170,12 @@ function set_session_cookie(string $token): void
     ]);
 }
 
-function get_session_token(): ?string
-{
-    $auth = $_SERVER['HTTP_AUTHORIZATION']
-        ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION']
-        ?? '';
-
-    if (preg_match('/^Bearer\s+(.+)$/i', $auth, $m)) {
-        return $m[1];
-    }
-
-    return $_COOKIE['session_token'] ?? null;
-}
 
 function generate_uuid_v4(): string
 {
     $data = random_bytes(16);
     $data[6] = chr(ord($data[6]) & 0x0f | 0x40);
-    $data[7] = chr(ord($data[7]) & 0x3f | 0x80);
+    $data[8] = chr(ord($data[8]) & 0x3f | 0x80);
 
     return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
 }
