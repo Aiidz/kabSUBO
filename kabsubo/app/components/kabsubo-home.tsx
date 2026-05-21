@@ -12,14 +12,10 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { FormEvent, useMemo, useState } from "react";
-import {
-  campusCenter,
-  foodPlaces,
-  isWithinCvsuIndangBounds,
-  rankPlaces,
-  type RankedPlace,
-} from "@/app/data/places";
+import { FormEvent, useEffect, useMemo, useState } from "react";
+import { campusCenter, isWithinCvsuIndangBounds } from "@/app/data/places";
+import type { FoodPlace, RankedPlace } from "@/app/data/places";
+import { placesApi, recommendationsApi } from "@/app/lib/api/kabsubo-api";
 import { MapCanvas, type Coordinates } from "@/app/components/map-canvas";
 
 type LocationState =
@@ -40,13 +36,11 @@ type RouteInfo = {
 const campusCenterLabel = "campus center";
 
 export function KabsuboHome() {
-  const approvedPlaces = useMemo(
-    () => foodPlaces.filter((place) => place.status === "approved"),
-    [],
-  );
+  const [approvedPlaces, setApprovedPlaces] = useState<FoodPlace[]>([]);
+  const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
   const [submittedQuery, setSubmittedQuery] = useState("");
-  const [selectedPlaceId, setSelectedPlaceId] = useState(approvedPlaces[0].id);
+  const [selectedPlaceId, setSelectedPlaceId] = useState("");
   const [userLocation, setUserLocation] = useState<Coordinates | null>(null);
   const [locationState, setLocationState] = useState<LocationState>("idle");
   const [directionsPlaceId, setDirectionsPlaceId] = useState<string | null>(
@@ -55,6 +49,17 @@ export function KabsuboHome() {
   const [routeStatus, setRouteStatus] = useState<RouteStatus>("idle");
   const [routeInfo, setRouteInfo] = useState<RouteInfo | null>(null);
   const [compareIds, setCompareIds] = useState<string[]>([]);
+  const [searchResults, setSearchResults] = useState<RankedPlace[]>([]);
+
+  useEffect(() => {
+    placesApi.listApproved().then((result) => {
+      setApprovedPlaces(result.data);
+      if (result.data.length > 0) {
+        setSelectedPlaceId(result.data[0].id);
+      }
+      setLoading(false);
+    });
+  }, []);
 
   const usableUserLocation = locationState === "found" ? userLocation : null;
   const origin = usableUserLocation ?? campusCenter;
@@ -77,35 +82,37 @@ export function KabsuboHome() {
       return [];
     }
 
-    return rankPlaces(submittedQuery)
-      .filter((place) => place.status === "approved" && place.matchScore > 0)
-      .map((place) => ({
-        ...place,
-        distanceKm: getDistanceKm(origin, place.coordinates),
-        openNow: isOpenNow(place.hours),
-      }));
-  }, [origin, submittedQuery]);
+    return searchResults.map((place) => ({
+      ...place,
+      distanceKm: getDistanceKm(origin, place.coordinates),
+      openNow: isOpenNow(place.hours),
+    }));
+  }, [origin, submittedQuery, searchResults]);
 
   const matchingPlaceIds = rankedResults.map((place) => place.id);
   const hasSubmitted = submittedQuery.trim().length > 0;
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     const nextQuery = query.trim();
     setSubmittedQuery(nextQuery);
 
-    const nextTopResult = rankPlaces(nextQuery).find(
-      (place) => place.status === "approved" && place.matchScore > 0,
-    );
+    if (!nextQuery) return;
 
-    if (nextTopResult) {
-      setSelectedPlaceId(nextTopResult.id);
+    const result = await recommendationsApi.search(nextQuery);
+    const results = result.data.filter((place) => place.matchScore > 0);
+    setSearchResults(results);
+
+    const topResult = results[0];
+    if (topResult) {
+      setSelectedPlaceId(topResult.id);
     }
   }
 
   function handleBackToLanding() {
     setSubmittedQuery("");
+    setSearchResults([]);
     setDirectionsPlaceId(null);
     setRouteInfo(null);
     setRouteStatus("idle");
@@ -195,11 +202,19 @@ export function KabsuboHome() {
     }
   }
 
+  if (loading) {
+    return (
+      <main className="flex h-screen items-center justify-center bg-[#101513]">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-white/20 border-t-white" />
+      </main>
+    );
+  }
+
   return (
     <main className="relative h-screen min-h-[640px] overflow-hidden bg-[#101513] text-[#171714]">
       <MapCanvas
         places={approvedPlaces}
-        selectedPlaceId={selectedPlaceId}
+        selectedPlaceId={selectedPlaceId || undefined}
         highlightedPlaceIds={matchingPlaceIds}
         isFiltering={hasSubmitted}
         userLocation={usableUserLocation}
@@ -505,13 +520,17 @@ function RecommendationsPanel({
               </div>
 
               <div className="mt-3 flex gap-3">
-                <Image
-                  src={place.bestSeller.imageUrl}
-                  alt={place.bestSeller.name}
-                  width={80}
-                  height={80}
-                  className="h-20 w-20 shrink-0 rounded-md object-cover"
-                />
+                {place.bestSeller.imageUrl ? (
+                  <Image
+                    src={place.bestSeller.imageUrl}
+                    alt={place.bestSeller.name}
+                    width={80}
+                    height={80}
+                    className="h-20 w-20 shrink-0 rounded-md object-cover"
+                  />
+                ) : (
+                  <div className="h-20 w-20 shrink-0 rounded-md bg-gradient-to-br from-[#2a1a0e] via-[#1f1a17] to-[#171714]" />
+                )}
                 <div className="min-w-0 text-sm">
                   <p className="font-bold text-black/70">
                     Best sellers: {place.menuHighlights.slice(0, 2).join(", ")}
