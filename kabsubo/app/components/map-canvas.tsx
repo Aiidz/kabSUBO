@@ -351,8 +351,12 @@ function MapcnMarkerPopup({ place }: { place: FoodPlace }) {
   return (
     <article className="food-popup-card">
       <div className="food-popup-image">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={place.bestSeller.imageUrl} alt={place.bestSeller.name} />
+        {place.bestSeller.imageUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={place.bestSeller.imageUrl} alt={place.bestSeller.name} />
+        ) : (
+          <div className="h-full w-full bg-gradient-to-br from-[#2a1a0e] via-[#1f1a17] to-[#171714]" />
+        )}
         <span>{place.type}</span>
       </div>
       <div className="food-popup-body">
