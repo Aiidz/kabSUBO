@@ -2,8 +2,22 @@
 
 declare(strict_types=1);
 
+function cors(): void
+{
+    header('Access-Control-Allow-Origin: http://localhost:3000');
+    header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
+    header('Access-Control-Allow-Headers: Content-Type');
+    header('Access-Control-Allow-Credentials: true');
+
+    if (get_method() === 'OPTIONS') {
+        http_response_code(204);
+        exit;
+    }
+}
+
 function json_response(mixed $data, int $status = 200): void
 {
+    cors();
     http_response_code($status);
     header('Content-Type: application/json; charset=utf-8');
     echo json_encode(['data' => $data], JSON_UNESCAPED_UNICODE);
@@ -12,6 +26,7 @@ function json_response(mixed $data, int $status = 200): void
 
 function error_response(string $message, int $status = 400): void
 {
+    cors();
     http_response_code($status);
     header('Content-Type: application/json; charset=utf-8');
     echo json_encode(['error' => $message], JSON_UNESCAPED_UNICODE);
