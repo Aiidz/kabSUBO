@@ -295,6 +295,56 @@ export const foodPlaces: FoodPlace[] = [
     ],
     status: "approved",
   },
+  {
+    id: "kokoks-griddle-grill",
+    name: "Kokok's Griddle & Grill",
+    type: "Grill house",
+    description:
+      "Chicken inasal, barbecue platters, and group meals submitted for review.",
+    coordinates: [120.8842, 14.1938],
+    address: "Bancod, Indang, Cavite",
+    priceRange: "PHP 99-200",
+    rating: 0,
+    reviews: 0,
+    walkTime: "10 min walk",
+    hours: "8:00 AM - 11:00 PM",
+    tags: ["chicken", "barbecue", "grill", "group meal", "dinner"],
+    menuHighlights: ["Chicken inasal", "Barbecue platter", "Pancit canton"],
+    menuItems: [
+      {
+        name: "Chicken inasal",
+        category: "Grilled",
+        price: 99,
+        prepNote: "Charcoal-grilled chicken served with rice.",
+        isBestSeller: true,
+        tags: ["chicken", "grill", "rice meal"],
+      },
+      {
+        name: "Barbecue platter",
+        category: "Sharing",
+        price: 199,
+        prepNote: "Skewers for small groups after class.",
+        isBestSeller: true,
+        tags: ["barbecue", "sharing", "dinner"],
+      },
+      {
+        name: "Pancit canton",
+        category: "Noodles",
+        price: 85,
+        prepNote: "Quick noodle order for merienda.",
+        tags: ["noodles", "snack", "merienda"],
+      },
+    ],
+    bestSeller: {
+      name: "Chicken inasal",
+      imageUrl:
+        "https://images.unsplash.com/photo-1598515214211-89d3c73ae83b?auto=format&fit=crop&w=640&q=80",
+    },
+    contact: "0919 456 0332",
+    submittedBy: "Colleen Legaspi",
+    recentReviews: [],
+    status: "pending",
+  },
 ];
 
 export function getFoodPlaceById(placeId: string) {
