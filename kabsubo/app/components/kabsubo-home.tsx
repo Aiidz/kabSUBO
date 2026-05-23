@@ -333,7 +333,7 @@ function HomeFloatingActions({ isResultsView }: { isResultsView: boolean }) {
     <div
       className={`absolute bottom-6 z-40 flex flex-col items-center gap-4 sm:bottom-8 ${
         isResultsView
-          ? "right-6 lg:right-[calc(600px+1.5rem)]"
+          ? "right-6 lg:right-[calc(480px+1.5rem)]"
           : "right-6 sm:right-8"
       }`}
     >
@@ -409,12 +409,12 @@ function RecommendationsPanel({
   }).toString()}`;
 
   return (
-    <aside className="absolute inset-x-0 bottom-0 z-30 max-h-[58vh] overflow-y-auto rounded-t-[26px] bg-[#fffaf0] px-6 pb-6 pt-5 shadow-[0_-14px_34px_rgba(0,75,53,0.22)] lg:inset-y-0 lg:left-auto lg:right-0 lg:max-h-none lg:w-[600px] lg:rounded-l-[28px] lg:rounded-tr-none lg:px-12 lg:pb-8 lg:pt-40 lg:shadow-[-14px_0_28px_rgba(0,0,0,0.22)]">
+    <aside className="absolute inset-x-0 bottom-0 z-30 max-h-[54vh] overflow-y-auto rounded-t-[24px] bg-[#fffaf0] px-5 pb-5 pt-4 shadow-[0_-14px_34px_rgba(0,75,53,0.22)] lg:inset-y-0 lg:left-auto lg:right-0 lg:max-h-none lg:w-[480px] lg:rounded-l-[26px] lg:rounded-tr-none lg:px-9 lg:pb-7 lg:pt-36 lg:shadow-[-12px_0_24px_rgba(0,0,0,0.2)]">
       <div className="sticky top-0 z-10 -mx-6 -mt-5 bg-[#fffaf0]/96 px-6 pb-4 pt-5 backdrop-blur lg:static lg:m-0 lg:bg-transparent lg:p-0">
-        <h2 className="text-3xl font-black leading-none tracking-normal text-[#073d33] sm:text-4xl">
+        <h2 className="text-3xl font-black leading-none tracking-normal text-[#073d33]">
           Check mo ‘to
         </h2>
-        <p className="mt-1 text-xl font-semibold text-[#073d33]/76">
+        <p className="mt-1 text-lg font-semibold text-[#073d33]/76">
           {results.length} match{results.length === 1 ? "" : "es"} found
         </p>
         {originLabel !== campusCenterLabel && (
@@ -444,7 +444,7 @@ function RecommendationsPanel({
         )}
       </div>
 
-      <div className="mt-4 space-y-3 lg:mt-6">
+      <div className="mt-4 space-y-3 lg:mt-5">
         {results.length === 0 ? (
           <div className="rounded-xl border border-[#004b35]/15 bg-[#fffaf0] p-4 shadow-md">
             <p className="font-black text-[#073d33]">No matching spots yet.</p>
@@ -463,21 +463,21 @@ function RecommendationsPanel({
             return (
               <article
                 key={place.id}
-                className="group relative overflow-hidden rounded-xl border border-[#004b35]/12 bg-[#fffaf0] py-3 pl-7 pr-4 shadow-[0_3px_8px_rgba(0,0,0,0.22)] transition hover:-translate-y-0.5 hover:shadow-[0_8px_18px_rgba(0,75,53,0.18)]"
+                className="group relative overflow-hidden rounded-xl border border-[#004b35]/12 bg-[#fffaf0] py-2.5 pl-6 pr-3.5 shadow-[0_3px_8px_rgba(0,0,0,0.2)] transition hover:-translate-y-0.5 hover:shadow-[0_8px_18px_rgba(0,75,53,0.18)]"
               >
                 <span className="absolute inset-y-0 left-0 w-2 bg-[#ffd400]" />
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <Link
                       href={`/place/${place.id}`}
-                      className="block truncate text-2xl font-black leading-tight text-[#073d33] hover:underline"
+                      className="block truncate text-xl font-black leading-tight text-[#073d33] hover:underline"
                     >
                       {place.name}
                     </Link>
-                    <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xl font-semibold leading-none text-[#416763]">
+                    <div className="mt-2 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-base font-semibold leading-none text-[#416763]">
                       <span className="inline-flex items-center gap-1">
                         <Star
-                          size={17}
+                          size={15}
                           fill="#ffd400"
                           className="text-[#ffd400]"
                           aria-hidden="true"
@@ -487,19 +487,19 @@ function RecommendationsPanel({
                       <span aria-hidden="true">•</span>
                       <span>{place.reviews} reviews</span>
                     </div>
-                    <p className="mt-1 flex items-center gap-1 text-xl font-semibold leading-tight text-[#416763]">
-                      <MapPin size={18} aria-hidden="true" />
+                    <p className="mt-1 flex items-center gap-1 text-base font-semibold leading-tight text-[#416763]">
+                      <MapPin size={16} aria-hidden="true" />
                       {formatResultDistance(place.distanceKm)} away from you
                     </p>
                     <div className="mt-1 flex flex-wrap gap-1.5">
-                      <span className="rounded-full border border-[#ff9f1c] bg-[#ffe4bf] px-2 py-0.5 text-base font-semibold leading-none text-[#c86400]">
+                      <span className="rounded-full border border-[#ff9f1c] bg-[#ffe4bf] px-2 py-0.5 text-sm font-semibold leading-none text-[#c86400]">
                         {primaryMatchedItem.toLowerCase()}
                       </span>
-                      <span className="rounded-full border border-[#7e8fb1] bg-[#eef3fb] px-2 py-0.5 text-base font-semibold leading-none text-[#41567d]">
+                      <span className="rounded-full border border-[#7e8fb1] bg-[#eef3fb] px-2 py-0.5 text-sm font-semibold leading-none text-[#41567d]">
                         {place.openNow ? "open" : "closed"}
                       </span>
                     </div>
-                    <p className="mt-2 text-xl font-black leading-none text-[#416763]">
+                    <p className="mt-1.5 text-lg font-black leading-none text-[#416763]">
                       {place.priceRange}
                     </p>
                   </div>
@@ -508,7 +508,7 @@ function RecommendationsPanel({
                     type="button"
                     onClick={() => onToggleCompare(place.id)}
                     disabled={compareLimitReached}
-                    className={`grid size-9 shrink-0 place-items-center rounded-full transition disabled:cursor-not-allowed disabled:opacity-35 ${
+                    className={`grid size-8 shrink-0 place-items-center rounded-full transition disabled:cursor-not-allowed disabled:opacity-35 ${
                       isSelectedForCompare
                         ? "bg-[#004b35] text-[#fffaf0]"
                         : "text-[#416763] hover:bg-[#004b35]/8 hover:text-[#004b35]"
@@ -520,17 +520,17 @@ function RecommendationsPanel({
                     }
                   >
                     <Heart
-                      size={21}
+                      size={19}
                       fill={isSelectedForCompare ? "currentColor" : "none"}
                       aria-hidden="true"
                     />
                   </button>
                 </div>
 
-                <div className="mt-3 grid grid-cols-3 gap-2 opacity-95 transition group-hover:opacity-100">
+                <div className="mt-2.5 grid grid-cols-3 gap-1.5 opacity-95 transition group-hover:opacity-100">
                   <Link
                     href={`/place/${place.id}`}
-                    className="inline-flex h-8 items-center justify-center gap-1 rounded-full border border-[#004b35]/15 bg-[#fffdf4] px-2 text-[11px] font-black text-[#073d33] transition hover:border-[#004b35]"
+                    className="inline-flex h-7 items-center justify-center gap-1 rounded-full border border-[#004b35]/15 bg-[#fffdf4] px-2 text-[10px] font-black text-[#073d33] transition hover:border-[#004b35]"
                   >
                     <Eye size={13} aria-hidden="true" />
                     Details
@@ -539,7 +539,7 @@ function RecommendationsPanel({
                     type="button"
                     onClick={() => onToggleCompare(place.id)}
                     disabled={compareLimitReached}
-                    className="inline-flex h-8 items-center justify-center gap-1 rounded-full border border-[#004b35]/15 bg-[#fffdf4] px-2 text-[11px] font-black text-[#073d33] transition hover:border-[#004b35] disabled:cursor-not-allowed disabled:opacity-45"
+                    className="inline-flex h-7 items-center justify-center gap-1 rounded-full border border-[#004b35]/15 bg-[#fffdf4] px-2 text-[10px] font-black text-[#073d33] transition hover:border-[#004b35] disabled:cursor-not-allowed disabled:opacity-45"
                   >
                     <Scale size={13} aria-hidden="true" />
                     {isSelectedForCompare ? "Added" : "Compare"}
@@ -547,7 +547,7 @@ function RecommendationsPanel({
                   <button
                     type="button"
                     onClick={() => onGetDirections(place.id)}
-                    className="inline-flex h-8 items-center justify-center gap-1 rounded-full bg-[#004b35] px-2 text-[11px] font-black text-[#fffaf0] transition hover:bg-[#073d33]"
+                    className="inline-flex h-7 items-center justify-center gap-1 rounded-full bg-[#004b35] px-2 text-[10px] font-black text-[#fffaf0] transition hover:bg-[#073d33]"
                   >
                     <Compass size={13} aria-hidden="true" />
                     Route
