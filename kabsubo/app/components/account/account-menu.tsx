@@ -69,11 +69,11 @@ export function AccountMenu() {
         <button
           type="button"
           onClick={() => setIsOpen((current) => !current)}
-          className="grid size-12 place-items-center rounded-full bg-[#004b35] text-[#fffaf0] shadow-2xl ring-2 ring-[#fffaf0]/70 transition hover:scale-105 sm:size-14"
+          className="grid size-14 place-items-center rounded-full bg-[#004b35] text-[#fffaf0] shadow-2xl ring-2 ring-[#fffaf0]/70 transition hover:scale-105 sm:size-16"
           aria-label="Open account menu"
           aria-expanded={isOpen}
         >
-          <UserRound size={20} aria-hidden="true" />
+          <UserRound size={24} aria-hidden="true" />
         </button>
 
         {isOpen && (
@@ -112,11 +112,11 @@ export function AccountMenu() {
       <button
         type="button"
         onClick={() => setIsOpen((current) => !current)}
-        className="grid size-12 place-items-center rounded-full bg-[#004b35] text-[#fffaf0] shadow-2xl ring-2 ring-[#fffaf0]/70 transition hover:scale-105 sm:size-14"
+        className="grid size-14 place-items-center rounded-full bg-[#004b35] text-[#fffaf0] shadow-2xl ring-2 ring-[#fffaf0]/70 transition hover:scale-105 sm:size-16"
         aria-label="Open account menu"
         aria-expanded={isOpen}
       >
-        <span className="text-base font-black leading-none">
+        <span className="text-lg font-black leading-none">
           {user.name.charAt(0).toUpperCase()}
         </span>
       </button>
