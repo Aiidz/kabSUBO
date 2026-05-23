@@ -71,7 +71,7 @@ export function PlaceActions({ placeId }: { placeId: string }) {
           compare, and view details without signing in.
         </p>
         <Link
-          href={`/sign-in?next=/place/${placeId}`}
+          href={`/auth?next=/place/${placeId}`}
           className="mt-4 inline-flex h-10 items-center justify-center gap-2 rounded-md bg-[#1f6f53] px-3 text-sm font-black text-white transition hover:bg-[#185840]"
         >
           <LogIn size={15} aria-hidden="true" />

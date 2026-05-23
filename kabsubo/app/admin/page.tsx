@@ -161,7 +161,7 @@ function AccessPanel({ title, body }: { title: string; body: string }) {
         <p className="mt-2 font-semibold leading-7 text-black/62">{body}</p>
         <div className="mt-5 flex flex-wrap gap-3">
           <Link
-            href="/sign-in?next=/admin"
+            href="/auth?next=/admin"
             className="inline-flex h-11 items-center justify-center rounded-md bg-[#1f6f53] px-4 text-sm font-black text-white transition hover:bg-[#185840]"
           >
             Sign in

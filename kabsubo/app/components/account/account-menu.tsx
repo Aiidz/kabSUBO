@@ -1,6 +1,13 @@
 "use client";
 
-import { LogIn, LogOut, Shield, UserRound } from "lucide-react";
+import {
+  FileClock,
+  Heart,
+  LogIn,
+  LogOut,
+  Shield,
+  UserRound,
+} from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { AuthUser } from "@/app/lib/api/kabsubo-api";
@@ -27,7 +34,7 @@ export function AccountMenu() {
   if (!user) {
     return (
       <Link
-        href="/sign-in"
+        href="/auth"
         className="pointer-events-auto absolute right-3 top-16 z-30 inline-flex h-11 items-center justify-center gap-2 rounded-md border border-white/55 bg-white/84 px-4 text-sm font-black text-[#171714] shadow-2xl backdrop-blur-xl transition hover:border-[#1f6f53] sm:right-6 sm:top-20"
       >
         <LogIn size={17} aria-hidden="true" />
@@ -56,6 +63,20 @@ export function AccountMenu() {
           <Shield size={16} aria-hidden="true" />
         </Link>
       )}
+      <Link
+        href="/my/submissions"
+        className="grid size-9 place-items-center rounded-md border border-black/10 bg-white text-[#171714] transition hover:border-[#1f6f53]"
+        aria-label="Open my submissions"
+      >
+        <FileClock size={16} aria-hidden="true" />
+      </Link>
+      <Link
+        href="/favorites"
+        className="grid size-9 place-items-center rounded-md border border-black/10 bg-white text-[#7b3320] transition hover:border-[#1f6f53]"
+        aria-label="Open favorites"
+      >
+        <Heart size={16} aria-hidden="true" />
+      </Link>
       <button
         type="button"
         onClick={() => void clearStoredUser()}

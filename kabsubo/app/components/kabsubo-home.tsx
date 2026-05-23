@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { FormEvent, useMemo, useState } from "react";
 import {
   campusCenter,
@@ -41,13 +42,14 @@ type RouteInfo = {
 
 const campusCenterLabel = "campus center";
 
-export function KabsuboHome() {
+export function KabsuboHome({ initialQuery = "" }: { initialQuery?: string }) {
+  const router = useRouter();
   const approvedPlaces = useMemo(
     () => foodPlaces.filter((place) => place.status === "approved"),
     [],
   );
-  const [query, setQuery] = useState("");
-  const [submittedQuery, setSubmittedQuery] = useState("");
+  const [query, setQuery] = useState(initialQuery);
+  const [submittedQuery, setSubmittedQuery] = useState(initialQuery);
   const [selectedPlaceId, setSelectedPlaceId] = useState(approvedPlaces[0].id);
   const [userLocation, setUserLocation] = useState<Coordinates | null>(null);
   const [locationState, setLocationState] = useState<LocationState>("idle");
@@ -95,6 +97,11 @@ export function KabsuboHome() {
     event.preventDefault();
 
     const nextQuery = query.trim();
+
+    if (nextQuery) {
+      router.push(`/results?q=${encodeURIComponent(nextQuery)}`);
+    }
+
     setSubmittedQuery(nextQuery);
 
     const nextTopResult = rankPlaces(nextQuery).find(
@@ -111,6 +118,7 @@ export function KabsuboHome() {
     setDirectionsPlaceId(null);
     setRouteInfo(null);
     setRouteStatus("idle");
+    router.push("/");
   }
 
   function handleToggleCompare(placeId: string) {
@@ -212,7 +220,7 @@ export function KabsuboHome() {
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(12,18,15,0.54),rgba(12,18,15,0.12)_46%,rgba(12,18,15,0.08)),linear-gradient(180deg,rgba(12,18,15,0.18),rgba(12,18,15,0)_38%,rgba(12,18,15,0.2))]" />
 
       <Link
-        href="/add-place"
+        href="/submit"
         className="pointer-events-auto absolute right-3 top-3 z-30 inline-flex h-11 items-center justify-center gap-2 rounded-md border border-white/55 bg-white/84 px-4 text-sm font-black text-[#171714] shadow-2xl backdrop-blur-xl transition hover:border-[#1f6f53] sm:right-6 sm:top-6"
       >
         <Store size={17} aria-hidden="true" />

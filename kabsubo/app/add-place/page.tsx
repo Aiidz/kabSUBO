@@ -159,7 +159,7 @@ export default function AddPlacePage() {
     }
 
     if (!currentUser) {
-      router.push("/sign-in?next=/add-place");
+      router.push("/auth?next=/submit");
       return;
     }
 
@@ -213,7 +213,7 @@ export default function AddPlacePage() {
           </p>
           <div className="mt-5 flex flex-wrap gap-3">
             <Link
-              href="/sign-in?next=/add-place"
+              href="/auth?next=/submit"
               className="inline-flex h-11 items-center justify-center rounded-md bg-[#1f6f53] px-4 text-sm font-black text-white transition hover:bg-[#185840]"
             >
               Sign in

@@ -9,6 +9,19 @@ NEXT_PUBLIC_KABSUBO_API_BASE_URL=http://localhost/kabsubo/api
 NEXT_PUBLIC_KABSUBO_USE_MOCK_API=false
 ```
 
+## Frontend Routes
+
+- `/` - map and craving prompt
+- `/results?q=...` - map and ranked recommendations panel
+- `/place/{placeId}` - restaurant detail
+- `/compare?ids=...` - side-by-side dish or restaurant comparison
+- `/submit` - add a new place, auth required
+- `/my/submissions` - user's submissions and statuses
+- `/favorites` - saved places, auth required
+- `/auth` - sign in and sign up
+- `/admin` - moderation queue and place editor, admin only
+- `/about` - project overview and credits
+
 ## Endpoint Files
 
 - `POST /auth.php?action=signin` - sign in with email and password
