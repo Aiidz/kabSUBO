@@ -21,6 +21,7 @@ import {
   rankPlaces,
   type RankedPlace,
 } from "@/app/data/places";
+import { AccountMenu } from "@/app/components/account/account-menu";
 import { MapCanvas, type Coordinates } from "@/app/components/map-canvas";
 
 type LocationState =
@@ -217,6 +218,8 @@ export function KabsuboHome() {
         <Store size={17} aria-hidden="true" />
         Add a place
       </Link>
+
+      <AccountMenu />
 
       {hasSubmitted ? (
         <CompactMapSearch

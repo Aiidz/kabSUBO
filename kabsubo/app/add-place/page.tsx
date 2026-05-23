@@ -9,11 +9,13 @@ import {
   MapPin,
   Plus,
   Send,
+  ShieldCheck,
   Store,
   Trash2,
   Utensils,
 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import maplibregl, { type Map, type Marker } from "maplibre-gl";
 import {
@@ -24,8 +26,10 @@ import {
 } from "@/app/data/places";
 import {
   submissionsApi,
+  type AuthUser,
   type CreatePlaceInput,
 } from "@/app/lib/api/kabsubo-api";
+import { getStoredUser } from "@/app/lib/auth/session";
 
 type StepId = "basic" | "location" | "menu" | "best-sellers" | "photos";
 type MenuDraft = FoodPlace["menuItems"][number];
@@ -93,6 +97,8 @@ const mapStyle: maplibregl.StyleSpecification = {
 };
 
 export default function AddPlacePage() {
+  const router = useRouter();
+  const [currentUser] = useState<AuthUser | null>(() => getStoredUser());
   const [stepIndex, setStepIndex] = useState(0);
   const [name, setName] = useState("");
   const [type, setType] = useState("");
@@ -100,7 +106,9 @@ export default function AddPlacePage() {
   const [address, setAddress] = useState("");
   const [hours, setHours] = useState("");
   const [contact, setContact] = useState("");
-  const [submittedBy, setSubmittedBy] = useState("");
+  const [submittedBy, setSubmittedBy] = useState(
+    () => currentUser?.name ?? "",
+  );
   const [tags, setTags] = useState("");
   const [coordinates, setCoordinates] =
     useState<[number, number]>(campusCenter);
@@ -150,6 +158,11 @@ export default function AddPlacePage() {
       return;
     }
 
+    if (!currentUser) {
+      router.push("/sign-in?next=/add-place");
+      return;
+    }
+
     const bestSellerName = bestSellerNames[0] ?? cleanedMenuItems[0]?.name;
     const input: CreatePlaceInput = {
       name: name.trim(),
@@ -178,12 +191,43 @@ export default function AddPlacePage() {
     setStatus("submitting");
 
     try {
-      await submissionsApi.create(input);
+      await submissionsApi.create(input, currentUser.id);
       setStatus("submitted");
     } catch {
       setStatus("idle");
       setError("Submission failed. Please check the details and try again.");
     }
+  }
+
+  if (!currentUser) {
+    return (
+      <main className="grid min-h-screen place-items-center bg-[#f6f3ec] px-5 text-[#171714]">
+        <section className="max-w-xl rounded-lg border border-black/10 bg-white/86 p-6 shadow-sm">
+          <span className="grid size-12 place-items-center rounded-lg bg-[#1f6f53] text-white">
+            <ShieldCheck size={24} aria-hidden="true" />
+          </span>
+          <h1 className="mt-5 text-3xl font-black">Sign in to submit</h1>
+          <p className="mt-2 font-semibold leading-7 text-black/62">
+            Browsing, searching, and comparing stay open to everyone. Adding a
+            place needs an account so you can edit your own submissions later.
+          </p>
+          <div className="mt-5 flex flex-wrap gap-3">
+            <Link
+              href="/sign-in?next=/add-place"
+              className="inline-flex h-11 items-center justify-center rounded-md bg-[#1f6f53] px-4 text-sm font-black text-white transition hover:bg-[#185840]"
+            >
+              Sign in
+            </Link>
+            <Link
+              href="/"
+              className="inline-flex h-11 items-center justify-center rounded-md border border-black/10 bg-white px-4 text-sm font-black text-[#171714] transition hover:border-[#1f6f53]"
+            >
+              Back to map
+            </Link>
+          </div>
+        </section>
+      </main>
+    );
   }
 
   if (status === "submitted") {

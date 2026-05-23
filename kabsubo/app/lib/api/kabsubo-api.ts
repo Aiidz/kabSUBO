@@ -10,6 +10,24 @@ export type ApiResult<T> = {
   source: "mock" | "php";
 };
 
+export type UserRole = "user" | "admin";
+
+export type AuthUser = {
+  id: string;
+  name: string;
+  email: string;
+  role: UserRole;
+};
+
+export type SignInInput = {
+  email: string;
+  password: string;
+};
+
+export type SignUpInput = SignInInput & {
+  name: string;
+};
+
 export type CreatePlaceInput = Omit<
   FoodPlace,
   "id" | "rating" | "reviews" | "status"
@@ -45,6 +63,7 @@ export type SubmissionRecord = {
   placeId: string;
   status: SubmissionStatus;
   submittedBy: string;
+  ownerUserId?: string;
   notes?: string;
 };
 
@@ -54,20 +73,99 @@ const shouldUseMock =
 
 let mockPlaces = structuredClone(foodPlaces);
 let mockFavorites: FavoriteRecord[] = [];
+let mockUsers: Array<AuthUser & { password: string }> = [
+  {
+    id: "user-demo-student",
+    name: "Demo Student",
+    email: "student@kabsubo.test",
+    password: "password",
+    role: "user",
+  },
+  {
+    id: "user-demo-admin",
+    name: "Demo Admin",
+    email: "admin@kabsubo.test",
+    password: "password",
+    role: "admin",
+  },
+];
 let mockSubmissions: SubmissionRecord[] = mockPlaces.map((place) => ({
   id: `submission-${place.id}`,
   placeId: place.id,
   status: place.status === "approved" ? "approved" : "pending",
   submittedBy: place.submittedBy,
+  ownerUserId: "user-demo-student",
 }));
 
 export const phpEndpoints = {
+  auth: "/auth.php",
   places: "/places.php",
   menuItems: "/menu_items.php",
   reviews: "/reviews.php",
   favorites: "/favorites.php",
   submissions: "/submissions.php",
   recommendations: "/recommendations.php",
+};
+
+export const authApi = {
+  async signIn(input: SignInInput) {
+    if (shouldUseMock) {
+      const user = mockUsers.find(
+        (item) =>
+          item.email.toLowerCase() === input.email.trim().toLowerCase() &&
+          item.password === input.password,
+      );
+
+      if (!user) {
+        throw new Error("Invalid email or password");
+      }
+
+      return fromMock(toPublicUser(user));
+    }
+
+    return fromPhp<AuthUser>(`${phpEndpoints.auth}?action=signin`, {
+      method: "POST",
+      body: input,
+    });
+  },
+
+  async signUp(input: SignUpInput) {
+    if (shouldUseMock) {
+      const existingUser = mockUsers.find(
+        (user) => user.email.toLowerCase() === input.email.trim().toLowerCase(),
+      );
+
+      if (existingUser) {
+        throw new Error("Email is already registered");
+      }
+
+      const user = {
+        id: `user-${slugify(input.email)}`,
+        name: input.name.trim(),
+        email: input.email.trim().toLowerCase(),
+        password: input.password,
+        role: "user" as const,
+      };
+
+      mockUsers = [...mockUsers, user];
+      return fromMock(toPublicUser(user));
+    }
+
+    return fromPhp<AuthUser>(`${phpEndpoints.auth}?action=signup`, {
+      method: "POST",
+      body: input,
+    });
+  },
+
+  async signOut() {
+    if (shouldUseMock) {
+      return fromMock({ ok: true });
+    }
+
+    return fromPhp<{ ok: true }>(`${phpEndpoints.auth}?action=signout`, {
+      method: "POST",
+    });
+  },
 };
 
 export const placesApi = {
@@ -111,7 +209,7 @@ export const placesApi = {
     );
   },
 
-  async create(input: CreatePlaceInput) {
+  async create(input: CreatePlaceInput, ownerUserId?: string) {
     if (shouldUseMock) {
       const place: FoodPlace = {
         ...input,
@@ -129,6 +227,7 @@ export const placesApi = {
           placeId: place.id,
           status: "pending",
           submittedBy: input.submittedBy,
+          ownerUserId,
         },
       ];
 
@@ -420,7 +519,7 @@ export const submissionsApi = {
     );
   },
 
-  async create(input: CreatePlaceInput) {
+  async create(input: CreatePlaceInput, ownerUserId?: string) {
     if (!shouldUseMock) {
       return fromPhp<SubmissionRecord>(phpEndpoints.submissions, {
         method: "POST",
@@ -428,13 +527,14 @@ export const submissionsApi = {
       });
     }
 
-    const createdPlace = await placesApi.create(input);
+    const createdPlace = await placesApi.create(input, ownerUserId);
 
     return fromMock({
       id: `submission-${createdPlace.data.id}`,
       placeId: createdPlace.data.id,
       status: "pending",
       submittedBy: input.submittedBy,
+      ownerUserId,
     });
   },
 
@@ -568,6 +668,15 @@ function requireMockMenuItem(place: FoodPlace, itemName: string) {
 
 function replaceMockPlace(place: FoodPlace) {
   return mockPlaces.map((item) => (item.id === place.id ? place : item));
+}
+
+function toPublicUser(user: AuthUser & { password: string }): AuthUser {
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+  };
 }
 
 function slugify(value: string) {

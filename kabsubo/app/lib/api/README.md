@@ -11,6 +11,9 @@ NEXT_PUBLIC_KABSUBO_USE_MOCK_API=false
 
 ## Endpoint Files
 
+- `POST /auth.php?action=signin` - sign in with email and password
+- `POST /auth.php?action=signup` - create a standard user account
+- `POST /auth.php?action=signout` - end the current session
 - `GET /places.php` - list places
 - `GET /places.php?id={placeId}` - get one place
 - `POST /places.php` - create submitted place
@@ -32,6 +35,27 @@ NEXT_PUBLIC_KABSUBO_USE_MOCK_API=false
 - `PUT /submissions.php?id={submissionId}` - approve/reject submission
 - `DELETE /submissions.php?id={submissionId}` - delete submission record
 - `GET /recommendations.php?q={query}` - ranked recommendation results
+
+## Account Rules
+
+- Browsing, searching, viewing details, and comparing must work without a session.
+- A signed-in `user` can submit places, leave reviews, save favorites, and edit their own submissions.
+- A signed-in `admin` can moderate submissions and edit or remove any entry.
+- PHP should store the signed-in user in the session or a secure token cookie.
+- Protected endpoints should return `401` when not signed in and `403` when the role or owner does not match.
+
+Auth responses should return the public user only:
+
+```json
+{
+  "data": {
+    "id": "user-123",
+    "name": "Demo Student",
+    "email": "student@kabsubo.test",
+    "role": "user"
+  }
+}
+```
 
 ## Response Shape
 

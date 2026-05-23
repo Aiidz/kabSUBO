@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PlaceInsetMap } from "@/app/components/place-inset-map";
+import { PlaceActions } from "@/app/components/place-actions";
 import {
   campusCenter,
   type FoodPlace,
@@ -166,6 +167,8 @@ export default async function PlaceDetailPage({ params }: PlacePageProps) {
               />
             </div>
           </section>
+
+          <PlaceActions placeId={place.id} />
         </aside>
       </section>
     </main>
