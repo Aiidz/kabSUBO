@@ -1,127 +1,109 @@
--- ============================================================
--- kabSUBO Database Schema
--- MariaDB 12.x / MySQL 8.x
--- Based on ADBMS project ERD + frontend data model
--- ============================================================
-
-CREATE DATABASE IF NOT EXISTS kabsupo
+CREATE DATABASE IF NOT EXISTS kabsubo
   CHARACTER SET utf8mb4
   COLLATE utf8mb4_unicode_ci;
 
-USE kabsupo;
+USE kabsubo;
 
--- ============================================================
--- 1. profiles — user profile linked to authentication
--- ============================================================
-CREATE TABLE IF NOT EXISTS profiles (
-    id           CHAR(36)     PRIMARY KEY DEFAULT (UUID()),
-    display_name VARCHAR(255) NOT NULL,
-    avatar_url   TEXT,
-    created_at   TIMESTAMP    DEFAULT CURRENT_TIMESTAMP
+CREATE TABLE IF NOT EXISTS users (
+  id VARCHAR(80) PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  email VARCHAR(255) NOT NULL UNIQUE,
+  password_hash VARCHAR(255) NOT NULL,
+  role ENUM('user', 'admin') NOT NULL DEFAULT 'user',
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
--- ============================================================
--- 2. user_roles — role assignment (admin / moderator / user)
--- ============================================================
-CREATE TABLE IF NOT EXISTS user_roles (
-    id      CHAR(36) PRIMARY KEY DEFAULT (UUID()),
-    user_id CHAR(36) NOT NULL,
-    role    VARCHAR(20) NOT NULL DEFAULT 'user',
-    FOREIGN KEY (user_id) REFERENCES profiles(id) ON DELETE CASCADE
-) ENGINE=InnoDB;
-
--- ============================================================
--- 3. places — food establishments / stalls
--- ============================================================
 CREATE TABLE IF NOT EXISTS places (
-    id           CHAR(36)      PRIMARY KEY DEFAULT (UUID()),
-    name         VARCHAR(255)  NOT NULL,
-    slug         VARCHAR(255)  NOT NULL,
-    type         VARCHAR(50) NOT NULL,
-    description  TEXT,
-    lat          DECIMAL(9,6),
-    lng          DECIMAL(9,6),
-    address      VARCHAR(500),
-    hours_json   JSON,
-    price_range  VARCHAR(50),
-    photo_urls   JSON,
-    contact      VARCHAR(100),
-    submitted_by CHAR(36),
-    status       VARCHAR(20) DEFAULT 'pending',
-    created_at   TIMESTAMP    DEFAULT CURRENT_TIMESTAMP,
-    updated_at   TIMESTAMP    DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (submitted_by) REFERENCES profiles(id) ON DELETE SET NULL
+  id VARCHAR(120) PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  type VARCHAR(100) NOT NULL,
+  description TEXT,
+  longitude DECIMAL(10,7) NOT NULL,
+  latitude DECIMAL(10,7) NOT NULL,
+  address VARCHAR(500),
+  price_range VARCHAR(80),
+  rating DECIMAL(3,2) NOT NULL DEFAULT 0,
+  reviews_count INT NOT NULL DEFAULT 0,
+  walk_time VARCHAR(80),
+  hours VARCHAR(120),
+  tags_json JSON,
+  menu_highlights_json JSON,
+  best_seller_name VARCHAR(255),
+  best_seller_image_url TEXT,
+  contact VARCHAR(255),
+  submitted_by VARCHAR(255),
+  status ENUM('approved', 'pending', 'rejected') NOT NULL DEFAULT 'pending',
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_places_status (status),
+  FULLTEXT KEY ft_places_search (name, type, description)
 ) ENGINE=InnoDB;
 
-CREATE INDEX idx_places_status ON places(status);
-CREATE INDEX idx_places_slug   ON places(slug);
-
--- Full-text index for craving search
-CREATE FULLTEXT INDEX ft_places_search
-    ON places(name, description);
-
--- ============================================================
--- 4. menu_items — individual menu offerings per place
--- ============================================================
 CREATE TABLE IF NOT EXISTS menu_items (
-    id            CHAR(36)      PRIMARY KEY DEFAULT (UUID()),
-    place_id      CHAR(36)      NOT NULL,
-    name          VARCHAR(255)  NOT NULL,
-    category      VARCHAR(100),
-    description   VARCHAR(500),
-    price         DECIMAL(10,2),
-    is_best_seller BOOLEAN      DEFAULT FALSE,
-    tags          JSON,
-    created_at    TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (place_id) REFERENCES places(id) ON DELETE CASCADE
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  place_id VARCHAR(120) NOT NULL,
+  name VARCHAR(255) NOT NULL,
+  category VARCHAR(120),
+  price DECIMAL(10,2) NOT NULL DEFAULT 0,
+  prep_note VARCHAR(500),
+  is_best_seller BOOLEAN NOT NULL DEFAULT FALSE,
+  tags_json JSON,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_menu_items_place (place_id),
+  FULLTEXT KEY ft_menu_items_search (name, category, prep_note),
+  CONSTRAINT fk_menu_items_place
+    FOREIGN KEY (place_id) REFERENCES places(id)
+    ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
-CREATE INDEX idx_menu_items_place ON menu_items(place_id);
-
--- Full-text index for menu-level search
-CREATE FULLTEXT INDEX ft_menu_items_search
-    ON menu_items(name);
-
--- ============================================================
--- 5. reviews — community ratings and feedback
--- ============================================================
 CREATE TABLE IF NOT EXISTS reviews (
-    id         CHAR(36)   PRIMARY KEY DEFAULT (UUID()),
-    place_id   CHAR(36)   NOT NULL,
-    user_id    CHAR(36)   NOT NULL,
-    rating     TINYINT    NOT NULL CHECK (rating >= 1 AND rating <= 5),
-    body       TEXT,
-    created_at TIMESTAMP  DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (place_id) REFERENCES places(id) ON DELETE CASCADE,
-    FOREIGN KEY (user_id)  REFERENCES profiles(id) ON DELETE CASCADE
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  place_id VARCHAR(120) NOT NULL,
+  user_id VARCHAR(80) NOT NULL,
+  author VARCHAR(255) NOT NULL,
+  rating TINYINT NOT NULL,
+  body TEXT,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_reviews_place (place_id),
+  INDEX idx_reviews_user (user_id),
+  CONSTRAINT fk_reviews_place
+    FOREIGN KEY (place_id) REFERENCES places(id)
+    ON DELETE CASCADE,
+  CONSTRAINT fk_reviews_user
+    FOREIGN KEY (user_id) REFERENCES users(id)
+    ON DELETE CASCADE,
+  CONSTRAINT chk_review_rating CHECK (rating >= 1 AND rating <= 5)
 ) ENGINE=InnoDB;
 
-CREATE INDEX idx_reviews_place ON reviews(place_id);
-
--- ============================================================
--- 6. favorites — user bookmarks (junction table)
--- ============================================================
 CREATE TABLE IF NOT EXISTS favorites (
-    user_id    CHAR(36)  NOT NULL,
-    place_id   CHAR(36)  NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (user_id, place_id),
-    FOREIGN KEY (user_id)  REFERENCES profiles(id) ON DELETE CASCADE,
-    FOREIGN KEY (place_id) REFERENCES places(id) ON DELETE CASCADE
+  user_id VARCHAR(80) NOT NULL,
+  place_id VARCHAR(120) NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (user_id, place_id),
+  INDEX idx_favorites_place (place_id),
+  CONSTRAINT fk_favorites_user
+    FOREIGN KEY (user_id) REFERENCES users(id)
+    ON DELETE CASCADE,
+  CONSTRAINT fk_favorites_place
+    FOREIGN KEY (place_id) REFERENCES places(id)
+    ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
--- ============================================================
--- 7. submissions_audit — moderation history log
--- ============================================================
-CREATE TABLE IF NOT EXISTS submissions_audit (
-    id         CHAR(36)   PRIMARY KEY DEFAULT (UUID()),
-    place_id   CHAR(36)   NOT NULL,
-    actor_id   CHAR(36),
-    action     VARCHAR(50) NOT NULL,
-    notes      TEXT,
-    created_at TIMESTAMP  DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (place_id) REFERENCES places(id) ON DELETE CASCADE,
-    FOREIGN KEY (actor_id) REFERENCES profiles(id) ON DELETE SET NULL
+CREATE TABLE IF NOT EXISTS submissions (
+  id VARCHAR(140) PRIMARY KEY,
+  place_id VARCHAR(120) NOT NULL,
+  status ENUM('approved', 'pending', 'rejected') NOT NULL DEFAULT 'pending',
+  submitted_by VARCHAR(255) NOT NULL,
+  owner_user_id VARCHAR(80),
+  notes TEXT,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_submissions_status (status),
+  INDEX idx_submissions_owner (owner_user_id),
+  CONSTRAINT fk_submissions_place
+    FOREIGN KEY (place_id) REFERENCES places(id)
+    ON DELETE CASCADE,
+  CONSTRAINT fk_submissions_owner
+    FOREIGN KEY (owner_user_id) REFERENCES users(id)
+    ON DELETE SET NULL
 ) ENGINE=InnoDB;
-
-CREATE INDEX idx_audit_place ON submissions_audit(place_id);

@@ -4,18 +4,19 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/db_config.php';
 require_once __DIR__ . '/helpers.php';
+require_once __DIR__ . '/places.php';
 
-$method  = get_method();
+$db = get_db();
+$method = get_method();
 $placeId = get_param('place_id');
-$author  = get_param('author');
-$db      = get_db();
+$author = get_param('author');
 
 match ($method) {
-    'GET'    => list_reviews($db, $placeId),
-    'POST'   => create_review($db),
-    'PUT'    => update_review($db, $placeId, $author),
+    'GET' => list_reviews($db, $placeId),
+    'POST' => create_review($db),
+    'PUT' => update_review($db, $placeId, $author),
     'DELETE' => delete_review($db, $placeId, $author),
-    default  => error_response('Method not allowed', 405),
+    default => error_response('Method not allowed', 405),
 };
 
 function list_reviews(PDO $db, ?string $placeId): void
@@ -24,154 +25,123 @@ function list_reviews(PDO $db, ?string $placeId): void
         error_response('place_id is required', 400);
     }
 
-    $stmt = $db->prepare(
-        "SELECT r.*, p.display_name
-         FROM reviews r
-         JOIN profiles p ON p.id = r.user_id
-         WHERE r.place_id = ?
-         ORDER BY r.created_at DESC
-         LIMIT 5"
-    );
-    $stmt->execute([$placeId]);
-    $rows = $stmt->fetchAll();
-
-    json_response(array_map('format_review', $rows));
+    json_response(get_recent_reviews_for_place($db, $placeId));
 }
 
 function create_review(PDO $db): void
 {
+    $user = require_auth($db);
     $body = get_json_body();
     $placeId = $body['placeId'] ?? null;
-    $author  = $body['author'] ?? null;
-
-    if (!$placeId || !$author) {
-        error_response('placeId and author are required', 400);
-    }
-
     $rating = (int) ($body['rating'] ?? 0);
-    if ($rating < 1 || $rating > 5) {
-        error_response('rating must be between 1 and 5', 422);
+
+    if (!$placeId || $rating < 1 || $rating > 5) {
+        error_response('placeId and a rating from 1 to 5 are required', 422);
     }
 
-    $userId = resolve_user($db, $author);
-
     $stmt = $db->prepare(
-        "INSERT INTO reviews (id, place_id, user_id, rating, body)
-         VALUES (UUID(), ?, ?, ?, ?)"
+        'INSERT INTO reviews (place_id, user_id, author, rating, body)
+         VALUES (?, ?, ?, ?, ?)'
     );
-    $stmt->execute([$placeId, $userId, $rating, $body['body'] ?? null]);
+    $stmt->execute([
+        $placeId,
+        $user['id'],
+        $body['author'] ?? $user['name'],
+        $rating,
+        trim((string) ($body['body'] ?? '')),
+    ]);
 
-    $stmt = $db->prepare(
-        "SELECT r.*, p.display_name
-         FROM reviews r
-         JOIN profiles p ON p.id = r.user_id
-         WHERE r.place_id = ? AND r.user_id = ?
-         ORDER BY r.created_at DESC
-         LIMIT 1"
-    );
-    $stmt->execute([$placeId, $userId]);
-    $review = $stmt->fetch();
-
-    json_response(format_review($review));
+    refresh_place_rating($db, $placeId);
+    json_response(get_recent_reviews_for_place($db, $placeId)[0] ?? [], 201);
 }
 
 function update_review(PDO $db, ?string $placeId, ?string $author): void
 {
+    $user = require_auth($db);
+
     if (!$placeId || !$author) {
         error_response('place_id and author are required', 400);
     }
 
-    $body = get_json_body();
-    $userId = resolve_user($db, $author);
+    $review = find_review($db, $placeId, $author);
 
+    if (!$review) {
+        error_response('Review not found', 404);
+    }
+
+    require_owner_or_admin($user, $review['user_id']);
+    $body = get_json_body();
     $fields = [];
     $params = [];
 
     if (array_key_exists('rating', $body)) {
         $rating = (int) $body['rating'];
+
         if ($rating < 1 || $rating > 5) {
-            error_response('rating must be between 1 and 5', 422);
+            error_response('Rating must be from 1 to 5', 422);
         }
+
         $fields[] = 'rating = ?';
         $params[] = $rating;
     }
 
     if (array_key_exists('body', $body)) {
         $fields[] = 'body = ?';
-        $params[] = $body['body'];
+        $params[] = trim((string) $body['body']);
     }
 
-    if (empty($fields)) {
+    if (!$fields) {
         error_response('No fields to update', 400);
     }
 
-    $params[] = $placeId;
-    $params[] = $userId;
-
-    $stmt = $db->prepare(
-        "UPDATE reviews SET " . implode(', ', $fields) . " WHERE place_id = ? AND user_id = ?"
-    );
+    $params[] = $review['id'];
+    $stmt = $db->prepare('UPDATE reviews SET ' . implode(', ', $fields) . ' WHERE id = ?');
     $stmt->execute($params);
-
-    if ($stmt->rowCount() === 0) {
-        error_response('Review not found', 404);
-    }
-
-    $stmt = $db->prepare(
-        "SELECT r.*, p.display_name
-         FROM reviews r
-         JOIN profiles p ON p.id = r.user_id
-         WHERE r.place_id = ? AND r.user_id = ?"
-    );
-    $stmt->execute([$placeId, $userId]);
-    $review = $stmt->fetch();
-
-    json_response(format_review($review));
-}
-
-function delete_review(PDO $db, ?string $placeId, ?string $author): void
-{
-    if (!$placeId || !$author) {
-        error_response('place_id and author are required', 400);
-    }
-
-    $userId = resolve_user($db, $author);
-
-    $stmt = $db->prepare("DELETE FROM reviews WHERE place_id = ? AND user_id = ?");
-    $stmt->execute([$placeId, $userId]);
+    refresh_place_rating($db, $placeId);
 
     json_response(['ok' => true]);
 }
 
-function resolve_user(PDO $db, string $displayName): string
+function delete_review(PDO $db, ?string $placeId, ?string $author): void
 {
-    $stmt = $db->prepare("SELECT id FROM profiles WHERE display_name = ?");
-    $stmt->execute([$displayName]);
-    $user = $stmt->fetch();
+    $user = require_auth($db);
 
-    if ($user) {
-        return $user['id'];
+    if (!$placeId || !$author) {
+        error_response('place_id and author are required', 400);
     }
 
-    $id = sprintf(
-        'user-%s',
-        strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $displayName))
-    );
+    $review = find_review($db, $placeId, $author);
 
-    $stmt = $db->prepare(
-        "INSERT IGNORE INTO profiles (id, display_name) VALUES (?, ?)"
-    );
-    $stmt->execute([$id, $displayName]);
+    if (!$review) {
+        error_response('Review not found', 404);
+    }
 
-    return $id;
+    require_owner_or_admin($user, $review['user_id']);
+    $db->prepare('DELETE FROM reviews WHERE id = ?')->execute([$review['id']]);
+    refresh_place_rating($db, $placeId);
+
+    json_response(['ok' => true]);
 }
 
-function format_review(array $row): array
+function find_review(PDO $db, string $placeId, string $author): ?array
 {
-    return [
-        'author' => $row['display_name'],
-        'rating' => (int) $row['rating'],
-        'body'   => $row['body'] ?? '',
-        'date'   => date('F Y', strtotime($row['created_at'])),
-    ];
+    $stmt = $db->prepare('SELECT * FROM reviews WHERE place_id = ? AND author = ? ORDER BY created_at DESC LIMIT 1');
+    $stmt->execute([$placeId, $author]);
+    $review = $stmt->fetch();
+
+    return $review ?: null;
+}
+
+function refresh_place_rating(PDO $db, string $placeId): void
+{
+    $stmt = $db->prepare('SELECT COUNT(*) reviews, COALESCE(AVG(rating), 0) rating FROM reviews WHERE place_id = ?');
+    $stmt->execute([$placeId]);
+    $row = $stmt->fetch();
+
+    $db->prepare('UPDATE places SET rating = ?, reviews_count = ? WHERE id = ?')
+        ->execute([
+            round((float) $row['rating'], 1),
+            (int) $row['reviews'],
+            $placeId,
+        ]);
 }
