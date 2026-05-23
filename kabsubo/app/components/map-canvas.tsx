@@ -87,7 +87,8 @@ export function MapCanvas({
       return;
     }
 
-    mapRef.current = new maplibregl.Map({
+    let isDisposed = false;
+    const map = new maplibregl.Map({
       container: mapContainer,
       style: osmStyle,
       center: campusCenter,
@@ -100,9 +101,15 @@ export function MapCanvas({
       attributionControl: { compact: true },
     });
 
-    setMapReady(true);
+    mapRef.current = map;
+    map.once("load", () => {
+      if (!isDisposed) {
+        setMapReady(true);
+      }
+    });
 
     return () => {
+      isDisposed = true;
       markersRef.current.forEach(cleanupMarkerInstance);
       markersRef.current = [];
       userMarkerRef.current?.remove();

@@ -3,16 +3,18 @@
 import {
   ArrowLeft,
   Bot,
-  Compass,
-  Eye,
+  Clock,
   Heart,
   LocateFixed,
   MapPin,
+  MessageCircle,
+  Phone,
   Plus,
-  Scale,
+  Send,
   Search,
   Star,
 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useMemo, useState } from "react";
@@ -59,6 +61,10 @@ export function KabsuboHome({ initialQuery = "" }: { initialQuery?: string }) {
   const [routeStatus, setRouteStatus] = useState<RouteStatus>("idle");
   const [routeInfo, setRouteInfo] = useState<RouteInfo | null>(null);
   const [compareIds, setCompareIds] = useState<string[]>([]);
+  const [activeDetailPlaceId, setActiveDetailPlaceId] = useState<string | null>(
+    null,
+  );
+  const [chatbotNotice, setChatbotNotice] = useState<string | null>(null);
 
   const usableUserLocation = locationState === "found" ? userLocation : null;
   const origin = usableUserLocation ?? campusCenter;
@@ -103,6 +109,8 @@ export function KabsuboHome({ initialQuery = "" }: { initialQuery?: string }) {
     }
 
     setSubmittedQuery(nextQuery);
+    setActiveDetailPlaceId(null);
+    setChatbotNotice(null);
 
     const nextTopResult = rankPlaces(nextQuery).find(
       (place) => place.status === "approved" && place.matchScore > 0,
@@ -118,21 +126,9 @@ export function KabsuboHome({ initialQuery = "" }: { initialQuery?: string }) {
     setDirectionsPlaceId(null);
     setRouteInfo(null);
     setRouteStatus("idle");
+    setActiveDetailPlaceId(null);
+    setChatbotNotice(null);
     router.push("/");
-  }
-
-  function handleToggleCompare(placeId: string) {
-    setCompareIds((currentIds) => {
-      if (currentIds.includes(placeId)) {
-        return currentIds.filter((currentId) => currentId !== placeId);
-      }
-
-      if (currentIds.length >= 4) {
-        return currentIds;
-      }
-
-      return [...currentIds, placeId];
-    });
   }
 
   function setCampusFallback() {
@@ -205,6 +201,21 @@ export function KabsuboHome({ initialQuery = "" }: { initialQuery?: string }) {
     }
   }
 
+  function handleOpenPlaceDetail(placeId: string) {
+    setActiveDetailPlaceId(placeId);
+    setChatbotNotice(null);
+    void handleGetDirections(placeId);
+  }
+
+  function handleOpenChatbot(placeId: string, placeName: string) {
+    setCompareIds((currentIds) =>
+      currentIds.includes(placeId) ? currentIds : [...currentIds, placeId],
+    );
+    setChatbotNotice(
+      `Chatbot comparison for ${placeName} will be finalized later.`,
+    );
+  }
+
   return (
     <main className="relative h-screen min-h-[640px] overflow-hidden bg-[#101513] text-[#171714]">
       <MapCanvas
@@ -237,13 +248,16 @@ export function KabsuboHome({ initialQuery = "" }: { initialQuery?: string }) {
       {hasSubmitted && (
         <RecommendationsPanel
           results={rankedResults}
-          query={submittedQuery}
           originLabel={originLabel}
           directionsPlaceId={directionsPlaceId}
           routeInfo={routeInfo}
           routeStatus={routeStatus}
           compareIds={compareIds}
-          onToggleCompare={handleToggleCompare}
+          activeDetailPlaceId={activeDetailPlaceId}
+          chatbotNotice={chatbotNotice}
+          onOpenPlaceDetail={handleOpenPlaceDetail}
+          onOpenChatbot={handleOpenChatbot}
+          onBackToResults={() => setActiveDetailPlaceId(null)}
           onGetDirections={handleGetDirections}
         />
       )}
@@ -384,32 +398,47 @@ function getLocationNotice(locationState: LocationState) {
 
 function RecommendationsPanel({
   results,
-  query,
   originLabel,
   directionsPlaceId,
   routeInfo,
   routeStatus,
   compareIds,
-  onToggleCompare,
+  activeDetailPlaceId,
+  chatbotNotice,
+  onOpenPlaceDetail,
+  onOpenChatbot,
+  onBackToResults,
   onGetDirections,
 }: {
   results: Array<RankedPlace & { distanceKm: number; openNow: boolean }>;
-  query: string;
   originLabel: string;
   directionsPlaceId: string | null;
   routeInfo: RouteInfo | null;
   routeStatus: RouteStatus;
   compareIds: string[];
-  onToggleCompare: (placeId: string) => void;
+  activeDetailPlaceId: string | null;
+  chatbotNotice: string | null;
+  onOpenPlaceDetail: (placeId: string) => void;
+  onOpenChatbot: (placeId: string, placeName: string) => void;
+  onBackToResults: () => void;
   onGetDirections: (placeId: string) => void;
 }) {
-  const compareHref = `/compare?${new URLSearchParams({
-    ids: compareIds.join(","),
-    q: query,
-  }).toString()}`;
+  const activeDetailPlace =
+    results.find((place) => place.id === activeDetailPlaceId) ?? null;
 
   return (
     <aside className="absolute inset-x-0 bottom-0 z-30 max-h-[54vh] overflow-y-auto rounded-t-[24px] bg-[#fffaf0] px-5 pb-5 pt-4 shadow-[0_-14px_34px_rgba(0,75,53,0.22)] lg:inset-y-0 lg:left-auto lg:right-0 lg:max-h-none lg:w-[480px] lg:rounded-l-[26px] lg:rounded-tr-none lg:px-9 lg:pb-7 lg:pt-36 lg:shadow-[-12px_0_24px_rgba(0,0,0,0.2)]">
+      {activeDetailPlace ? (
+        <PlaceDetailPanel
+          place={activeDetailPlace}
+          directionsPlaceId={directionsPlaceId}
+          routeInfo={routeInfo}
+          routeStatus={routeStatus}
+          onBackToResults={onBackToResults}
+          onGetDirections={onGetDirections}
+        />
+      ) : (
+        <>
       <div className="sticky top-0 z-10 -mx-6 -mt-5 bg-[#fffaf0]/96 px-6 pb-4 pt-5 backdrop-blur lg:static lg:m-0 lg:bg-transparent lg:p-0">
         <h2 className="text-3xl font-black leading-none tracking-normal text-[#073d33]">
           Check mo ‘to
@@ -425,22 +454,17 @@ function RecommendationsPanel({
         {compareIds.length > 0 && (
           <div className="mt-4 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[#004b35]/15 bg-[#f6efda] px-4 py-3">
             <p className="text-sm font-black text-[#185840]">
-              {compareIds.length}/4 selected for compare
+              {compareIds.length}/4 sent to chatbot
             </p>
-            {compareIds.length >= 2 ? (
-              <Link
-                href={compareHref}
-                className="inline-flex h-9 items-center justify-center gap-2 rounded-full bg-[#004b35] px-4 text-xs font-black text-[#fffaf0] transition hover:bg-[#073d33]"
-              >
-                <Scale size={14} aria-hidden="true" />
-                Open compare
-              </Link>
-            ) : (
-              <span className="text-xs font-bold uppercase tracking-[0.14em] text-[#7b3320]">
-                Pick one more
-              </span>
-            )}
+            <span className="text-xs font-bold uppercase tracking-[0.14em] text-[#7b3320]">
+              Chatbot placeholder
+            </span>
           </div>
+        )}
+        {chatbotNotice && (
+          <p className="mt-3 rounded-xl border border-[#004b35]/15 bg-[#f6efda] px-4 py-3 text-sm font-bold text-[#073d33]">
+            {chatbotNotice}
+          </p>
         )}
       </div>
 
@@ -455,25 +479,29 @@ function RecommendationsPanel({
         ) : (
           results.map((place) => {
             const isSelectedForCompare = compareIds.includes(place.id);
-            const compareLimitReached =
-              compareIds.length >= 4 && !isSelectedForCompare;
             const primaryMatchedItem =
               place.matchedMenuItems[0] ?? place.bestSeller.name;
 
             return (
               <article
                 key={place.id}
-                className="group relative overflow-hidden rounded-xl border border-[#004b35]/12 bg-[#fffaf0] py-2.5 pl-6 pr-3.5 shadow-[0_3px_8px_rgba(0,0,0,0.2)] transition hover:-translate-y-0.5 hover:shadow-[0_8px_18px_rgba(0,75,53,0.18)]"
+                role="button"
+                tabIndex={0}
+                onClick={() => onOpenPlaceDetail(place.id)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    onOpenPlaceDetail(place.id);
+                  }
+                }}
+                className="group relative cursor-pointer overflow-hidden rounded-xl border border-[#004b35]/12 bg-[#fffaf0] py-2.5 pl-6 pr-3.5 shadow-[0_3px_8px_rgba(0,0,0,0.2)] transition hover:-translate-y-0.5 hover:shadow-[0_8px_18px_rgba(0,75,53,0.18)] focus:outline-none focus:ring-2 focus:ring-[#004b35]/35"
               >
                 <span className="absolute inset-y-0 left-0 w-2 bg-[#ffd400]" />
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <Link
-                      href={`/place/${place.id}`}
-                      className="block truncate text-xl font-black leading-tight text-[#073d33] hover:underline"
-                    >
+                    <h3 className="truncate text-xl font-black leading-tight text-[#073d33]">
                       {place.name}
-                    </Link>
+                    </h3>
                     <div className="mt-2 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-base font-semibold leading-none text-[#416763]">
                       <span className="inline-flex items-center gap-1">
                         <Star
@@ -506,8 +534,10 @@ function RecommendationsPanel({
 
                   <button
                     type="button"
-                    onClick={() => onToggleCompare(place.id)}
-                    disabled={compareLimitReached}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onOpenChatbot(place.id, place.name);
+                    }}
                     className={`grid size-8 shrink-0 place-items-center rounded-full transition disabled:cursor-not-allowed disabled:opacity-35 ${
                       isSelectedForCompare
                         ? "bg-[#004b35] text-[#fffaf0]"
@@ -515,8 +545,8 @@ function RecommendationsPanel({
                     }`}
                     aria-label={
                       isSelectedForCompare
-                        ? `Remove ${place.name} from compare`
-                        : `Add ${place.name} to compare`
+                        ? `Open chatbot comparison for ${place.name}`
+                        : `Compare ${place.name} in chatbot`
                     }
                   >
                     <Heart
@@ -527,30 +557,17 @@ function RecommendationsPanel({
                   </button>
                 </div>
 
-                <div className="mt-2.5 grid grid-cols-3 gap-1.5 opacity-95 transition group-hover:opacity-100">
-                  <Link
-                    href={`/place/${place.id}`}
-                    className="inline-flex h-7 items-center justify-center gap-1 rounded-full border border-[#004b35]/15 bg-[#fffdf4] px-2 text-[10px] font-black text-[#073d33] transition hover:border-[#004b35]"
-                  >
-                    <Eye size={13} aria-hidden="true" />
-                    Details
-                  </Link>
+                <div className="mt-2.5 grid grid-cols-1 gap-1.5 opacity-95 transition group-hover:opacity-100">
                   <button
                     type="button"
-                    onClick={() => onToggleCompare(place.id)}
-                    disabled={compareLimitReached}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onOpenChatbot(place.id, place.name);
+                    }}
                     className="inline-flex h-7 items-center justify-center gap-1 rounded-full border border-[#004b35]/15 bg-[#fffdf4] px-2 text-[10px] font-black text-[#073d33] transition hover:border-[#004b35] disabled:cursor-not-allowed disabled:opacity-45"
                   >
-                    <Scale size={13} aria-hidden="true" />
-                    {isSelectedForCompare ? "Added" : "Compare"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => onGetDirections(place.id)}
-                    className="inline-flex h-7 items-center justify-center gap-1 rounded-full bg-[#004b35] px-2 text-[10px] font-black text-[#fffaf0] transition hover:bg-[#073d33]"
-                  >
-                    <Compass size={13} aria-hidden="true" />
-                    Route
+                    <Bot size={13} aria-hidden="true" />
+                    Compare with chatbot
                   </button>
                 </div>
 
@@ -578,7 +595,261 @@ function RecommendationsPanel({
           })
         )}
       </div>
+        </>
+      )}
     </aside>
+  );
+}
+
+function PlaceDetailPanel({
+  place,
+  directionsPlaceId,
+  routeInfo,
+  routeStatus,
+  onBackToResults,
+  onGetDirections,
+}: {
+  place: RankedPlace & { distanceKm: number; openNow: boolean };
+  directionsPlaceId: string | null;
+  routeInfo: RouteInfo | null;
+  routeStatus: RouteStatus;
+  onBackToResults: () => void;
+  onGetDirections: (placeId: string) => void;
+}) {
+  const menuByCategory = groupMenuByCategory(place.menuItems);
+  const routeIsActive = directionsPlaceId === place.id;
+
+  return (
+    <div className="-mx-5 -mb-5 -mt-4 text-[#073d33] lg:-mx-9 lg:-mb-7 lg:-mt-36">
+      <div className="relative h-52 overflow-hidden rounded-t-[24px] lg:h-72 lg:rounded-tl-[26px] lg:rounded-tr-none">
+        <Image
+          src={place.bestSeller.imageUrl}
+          alt={place.bestSeller.name}
+          fill
+          className="object-cover"
+          sizes="480px"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#004b35]/10 to-[#004b35]/24" />
+        <button
+          type="button"
+          onClick={onBackToResults}
+          className="absolute left-4 top-4 inline-flex h-9 items-center gap-2 rounded-full bg-[#004b35] px-4 text-sm font-black text-[#fffaf0] shadow-lg transition hover:bg-[#073d33]"
+        >
+          <ArrowLeft size={16} aria-hidden="true" />
+          Results
+        </button>
+      </div>
+
+      <div className="grid grid-cols-3 gap-1 border-y-4 border-[#fffaf0]">
+        {place.menuItems.slice(0, 3).map((item) => (
+          <div
+            key={item.name}
+            className="grid h-20 place-items-center bg-[#004b35] px-2 text-center text-xs font-black text-[#fffaf0] lg:h-24"
+          >
+            {item.name}
+          </div>
+        ))}
+      </div>
+
+      <div className="px-5 pb-5 pt-5 lg:px-9 lg:pb-7">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h2 className="text-3xl font-black leading-none">{place.name}</h2>
+            <div className="mt-3 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-sm font-semibold text-[#416763]">
+              <span className="inline-flex items-center gap-1">
+                <Star
+                  size={15}
+                  fill="#ffd400"
+                  className="text-[#ffd400]"
+                  aria-hidden="true"
+                />
+                {place.rating.toFixed(1)}
+              </span>
+              <span aria-hidden="true">•</span>
+              <span>{place.reviews} reviews</span>
+            </div>
+            <p className="mt-1 flex items-start gap-1 text-sm font-semibold leading-5 text-[#416763]">
+              <MapPin size={15} className="mt-0.5 shrink-0" aria-hidden="true" />
+              {place.address}
+            </p>
+            <p className="mt-1 text-sm font-black text-[#416763]">
+              {place.priceRange}
+            </p>
+            <p className="mt-1 flex items-center gap-2 text-sm font-semibold text-[#416763]">
+              <Clock size={15} aria-hidden="true" />
+              {place.hours}
+              <span
+                className={`rounded-full border px-2 py-0.5 text-xs font-black uppercase ${
+                  place.openNow
+                    ? "border-[#75b843] bg-[#e8f6d9] text-[#4f962a]"
+                    : "border-[#7e8fb1] bg-[#eef3fb] text-[#41567d]"
+                }`}
+              >
+                {place.openNow ? "Open" : "Closed"}
+              </span>
+            </p>
+          </div>
+          <Heart size={22} className="mt-1 shrink-0 text-[#416763]" aria-hidden="true" />
+        </div>
+
+        <DetailDivider />
+
+        <section>
+          <h3 className="text-xl font-black">Description</h3>
+          <p className="mt-2 text-sm font-semibold leading-6 text-[#073d33]">
+            {place.description}
+          </p>
+          <p className="mt-3 text-sm font-semibold leading-6 text-[#073d33]">
+            Best known for {place.menuHighlights.join(", ").toLowerCase()}.
+            Submitted by {place.submittedBy}.
+          </p>
+        </section>
+
+        <DetailDivider />
+
+        <section>
+          <h3 className="text-xl font-black">Menu</h3>
+          <div className="mt-3 space-y-4">
+            {Object.entries(menuByCategory).map(([category, items]) => (
+              <div key={category}>
+                <h4 className="text-xs font-black uppercase tracking-[0.14em] text-[#416763]">
+                  {category}
+                </h4>
+                <div className="mt-2 space-y-2">
+                  {items.map((item) => (
+                    <div
+                      key={item.name}
+                      className="flex items-start justify-between gap-3 rounded-lg border border-[#004b35]/12 bg-[#f8f5e9] px-3 py-2"
+                    >
+                      <div>
+                        <p className="text-sm font-black">{item.name}</p>
+                        {item.prepNote && (
+                          <p className="mt-1 text-xs font-semibold leading-4 text-[#416763]">
+                            {item.prepNote}
+                          </p>
+                        )}
+                        {item.isBestSeller && (
+                          <span className="mt-1 inline-flex rounded-full bg-[#ffd400] px-2 py-0.5 text-[10px] font-black uppercase text-[#073d33]">
+                            Best seller
+                          </span>
+                        )}
+                      </div>
+                      <p className="shrink-0 text-sm font-black">PHP {item.price}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <DetailDivider />
+
+        <section>
+          <h3 className="text-xl font-black">Comments</h3>
+          <div className="mt-3 space-y-3">
+            {place.recentReviews.map((review) => (
+              <article
+                key={`${review.author}-${review.date}`}
+                className="border-b border-[#004b35]/18 pb-3 last:border-0"
+              >
+                <div className="flex gap-3">
+                  <span className="grid size-10 shrink-0 place-items-center rounded-full bg-[#004b35] text-sm font-black text-[#fffaf0]">
+                    {review.author.charAt(0)}
+                  </span>
+                  <div>
+                    <p className="text-sm font-black">{review.author}</p>
+                    <p className="text-xs font-semibold text-[#416763]">{review.date}</p>
+                    <p className="mt-1 text-sm font-semibold text-[#ffd400]">
+                      {"★".repeat(review.rating)}
+                    </p>
+                    <p className="text-sm font-semibold leading-5">{review.body}</p>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+          <div className="mt-3 flex items-center gap-2">
+            <span className="grid size-10 shrink-0 place-items-center rounded-full bg-[#004b35]" />
+            <input
+              className="h-9 min-w-0 flex-1 rounded-md border border-[#004b35] bg-transparent px-3 text-sm font-semibold outline-none placeholder:text-[#416763]"
+              placeholder="Add yours..."
+            />
+            <button
+              type="button"
+              className="grid size-9 place-items-center rounded-md bg-[#416763] text-[#fffaf0]"
+              aria-label="Submit comment"
+            >
+              <Send size={17} aria-hidden="true" />
+            </button>
+          </div>
+        </section>
+
+        <section className="mt-5 rounded-lg border border-[#004b35] p-5">
+          <div className="flex items-center justify-between">
+            <h3 className="text-xl font-black">Contact</h3>
+            <Phone size={18} aria-hidden="true" />
+          </div>
+          <p className="mt-3 flex items-center gap-2 text-sm font-semibold">
+            <Phone size={14} aria-hidden="true" />
+            {place.contact}
+          </p>
+          <p className="mt-1 flex items-center gap-2 text-sm font-semibold">
+            <MessageCircle size={14} aria-hidden="true" />
+            {place.submittedBy}
+          </p>
+        </section>
+
+        <div className="mt-5 flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => onGetDirections(place.id)}
+            className="h-12 flex-1 rounded-full bg-[#004b35] text-sm font-black text-[#fffaf0] transition hover:bg-[#073d33]"
+          >
+            Go Now
+          </button>
+          <button
+            type="button"
+            className="grid size-12 place-items-center rounded-full border border-[#004b35] text-[#004b35]"
+            aria-label="Open chatbot"
+          >
+            <MessageCircle size={25} aria-hidden="true" />
+          </button>
+        </div>
+
+        {routeIsActive && (
+          <p className="mt-3 rounded-lg border border-[#004b35]/18 bg-[#f6efda] px-3 py-2 text-sm font-bold">
+            {routeStatus === "loading" && "Drawing route on the map..."}
+            {routeStatus === "ready" && routeInfo && (
+              <>
+                Route ready: {formatDistance(routeInfo.distanceMeters)} -{" "}
+                {formatDuration(routeInfo.durationSeconds)}
+              </>
+            )}
+            {routeStatus === "fallback" && routeInfo && (
+              <>
+                Direct route shown: {formatDistance(routeInfo.distanceMeters)} -{" "}
+                {formatDuration(routeInfo.durationSeconds)}
+              </>
+            )}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function DetailDivider() {
+  return <hr className="my-6 border-[#004b35]/75" />;
+}
+
+function groupMenuByCategory(menuItems: RankedPlace["menuItems"]) {
+  return menuItems.reduce<Record<string, RankedPlace["menuItems"]>>(
+    (groups, item) => {
+      groups[item.category] = [...(groups[item.category] ?? []), item];
+      return groups;
+    },
+    {},
   );
 }
 
