@@ -492,14 +492,24 @@ function HomeFloatingActions({
           : "right-6 sm:right-8"
       }`}
     >
-      <button
-        type="button"
-        onClick={onOpenChatbot}
-        className="grid size-14 place-items-center rounded-full border border-[#004b35] bg-[#fffaf0] text-[#004b35] shadow-2xl transition hover:-translate-y-0.5 hover:bg-[#fff6dd]"
-        aria-label="Open chatbot"
-      >
-        <Bot size={26} aria-hidden="true" />
-      </button>
+      {isResultsView ? (
+        <button
+          type="button"
+          onClick={onOpenChatbot}
+          className="grid size-14 place-items-center rounded-full border border-[#004b35] bg-[#fffaf0] text-[#004b35] shadow-2xl transition hover:-translate-y-0.5 hover:bg-[#fff6dd]"
+          aria-label="Open chatbot"
+        >
+          <Bot size={26} aria-hidden="true" />
+        </button>
+      ) : (
+        <Link
+          href="/chatbot"
+          className="grid size-14 place-items-center rounded-full border border-[#004b35] bg-[#fffaf0] text-[#004b35] shadow-2xl transition hover:-translate-y-0.5 hover:bg-[#fff6dd]"
+          aria-label="Open chatbot"
+        >
+          <Bot size={26} aria-hidden="true" />
+        </Link>
+      )}
       <Link
         href="/submit"
         className="grid size-14 place-items-center rounded-full bg-[#004b35] text-[#fffaf0] shadow-2xl transition hover:-translate-y-0.5 hover:bg-[#073d33]"
