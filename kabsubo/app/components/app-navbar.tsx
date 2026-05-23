@@ -1,8 +1,14 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { AccountMenu } from "@/app/components/account/account-menu";
 
 export function AppNavbar() {
+  const pathname = usePathname();
+  const isAuthPage = pathname === "/auth" || pathname === "/sign-in";
+
   return (
     <header className="pointer-events-none fixed inset-x-0 top-0 z-50 flex items-center justify-between px-4 py-4 sm:px-8 sm:py-6">
       <Link
@@ -20,7 +26,7 @@ export function AppNavbar() {
         />
       </Link>
 
-      <AccountMenu />
+      {!isAuthPage && <AccountMenu />}
     </header>
   );
 }
