@@ -5,12 +5,14 @@ import {
   Bot,
   Compass,
   Eye,
+  Heart,
   LocateFixed,
+  MapPin,
   Plus,
   Scale,
   Search,
+  Star,
 } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useMemo, useState } from "react";
@@ -218,14 +220,7 @@ export function KabsuboHome({ initialQuery = "" }: { initialQuery?: string }) {
       <div className="pointer-events-none absolute inset-0 bg-[#fffaf0]/42" />
 
       {hasSubmitted ? (
-        <CompactMapSearch
-          query={query}
-          locationLabel={originLabel}
-          locationNotice={locationNotice}
-          onBack={handleBackToLanding}
-          onQueryChange={setQuery}
-          onSubmit={handleSubmit}
-        />
+        <ResultsBackButton onBack={handleBackToLanding} />
       ) : (
         <LandingSearchCard
           locationState={locationState}
@@ -237,7 +232,7 @@ export function KabsuboHome({ initialQuery = "" }: { initialQuery?: string }) {
         />
       )}
 
-      {!hasSubmitted && <HomeFloatingActions />}
+      <HomeFloatingActions isResultsView={hasSubmitted} />
 
       {hasSubmitted && (
         <RecommendationsPanel
@@ -333,9 +328,15 @@ function LandingSearchCard({
   );
 }
 
-function HomeFloatingActions() {
+function HomeFloatingActions({ isResultsView }: { isResultsView: boolean }) {
   return (
-    <div className="absolute bottom-6 right-6 z-40 flex flex-col items-center gap-4 sm:bottom-8 sm:right-8">
+    <div
+      className={`absolute bottom-6 z-40 flex flex-col items-center gap-4 sm:bottom-8 ${
+        isResultsView
+          ? "right-6 lg:right-[calc(600px+1.5rem)]"
+          : "right-6 sm:right-8"
+      }`}
+    >
       <button
         type="button"
         className="grid size-14 place-items-center rounded-full border border-[#004b35] bg-[#fffaf0] text-[#004b35] shadow-2xl transition hover:-translate-y-0.5 hover:bg-[#fff6dd]"
@@ -354,61 +355,22 @@ function HomeFloatingActions() {
   );
 }
 
-function CompactMapSearch({
-  query,
-  locationLabel,
-  locationNotice,
+function ResultsBackButton({
   onBack,
-  onQueryChange,
-  onSubmit,
 }: {
-  query: string;
-  locationLabel: string;
-  locationNotice: string | null;
   onBack: () => void;
-  onQueryChange: (query: string) => void;
-  onSubmit: (event: FormEvent<HTMLFormElement>) => void;
 }) {
   return (
-    <section className="pointer-events-none absolute inset-x-3 top-24 z-30 sm:left-6 sm:right-auto sm:top-28 sm:w-[500px]">
-      <form
-        onSubmit={onSubmit}
-        className="pointer-events-auto rounded-lg border border-white/55 bg-white/84 p-2 shadow-2xl backdrop-blur-xl"
+    <div className="pointer-events-none absolute left-5 top-36 z-30 sm:left-12 sm:top-40">
+      <button
+        type="button"
+        onClick={onBack}
+        className="pointer-events-auto inline-flex h-11 items-center gap-2 rounded-full bg-[#004b35] px-6 text-lg font-black text-[#fffaf0] shadow-lg transition hover:bg-[#073d33]"
       >
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={onBack}
-            className="grid size-10 shrink-0 place-items-center rounded-md bg-[#171714] text-white transition hover:bg-[#2a2822]"
-            aria-label="Back to search landing"
-          >
-            <ArrowLeft size={18} aria-hidden="true" />
-          </button>
-          <Search size={18} className="text-[#7b3320]" aria-hidden="true" />
-          <input
-            value={query}
-            onChange={(event) => onQueryChange(event.target.value)}
-            className="h-11 min-w-0 flex-1 bg-transparent text-sm font-bold outline-none placeholder:text-black/42"
-            placeholder="Search another craving..."
-            aria-label="Map search"
-          />
-          <button
-            type="submit"
-            className="h-9 rounded-md bg-[#1f6f53] px-3 text-sm font-bold text-white transition hover:bg-[#185840]"
-          >
-            Search
-          </button>
-        </div>
-        <p className="px-12 pb-1 text-xs font-bold uppercase tracking-[0.16em] text-black/45">
-          Map search - from {locationLabel}
-        </p>
-        {locationNotice && (
-          <p className="px-12 pb-1 text-xs font-bold leading-4 text-[#7b3320]">
-            {locationNotice}
-          </p>
-        )}
-      </form>
-    </section>
+        <ArrowLeft size={22} aria-hidden="true" />
+        Go Back
+      </button>
+    </div>
   );
 }
 
@@ -447,28 +409,28 @@ function RecommendationsPanel({
   }).toString()}`;
 
   return (
-    <aside className="absolute inset-x-3 bottom-3 z-20 max-h-[52vh] overflow-y-auto rounded-lg border border-white/55 bg-white/86 p-4 shadow-2xl backdrop-blur-xl lg:inset-y-6 lg:left-auto lg:right-6 lg:w-[450px] lg:max-h-none">
-      <div className="sticky top-0 z-10 -mx-4 -mt-4 border-b border-black/10 bg-white/90 px-4 py-4 backdrop-blur-xl">
-        <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#7b3320]">
-          Ranked recommendations
-        </p>
-        <h2 className="mt-1 text-2xl font-black">
-          {results.length} match{results.length === 1 ? "" : "es"}{" "}
-          for &quot;
-          {query}&quot;
+    <aside className="absolute inset-x-0 bottom-0 z-30 max-h-[58vh] overflow-y-auto rounded-t-[26px] bg-[#fffaf0] px-6 pb-6 pt-5 shadow-[0_-14px_34px_rgba(0,75,53,0.22)] lg:inset-y-0 lg:left-auto lg:right-0 lg:max-h-none lg:w-[600px] lg:rounded-l-[28px] lg:rounded-tr-none lg:px-12 lg:pb-8 lg:pt-40 lg:shadow-[-14px_0_28px_rgba(0,0,0,0.22)]">
+      <div className="sticky top-0 z-10 -mx-6 -mt-5 bg-[#fffaf0]/96 px-6 pb-4 pt-5 backdrop-blur lg:static lg:m-0 lg:bg-transparent lg:p-0">
+        <h2 className="text-3xl font-black leading-none tracking-normal text-[#073d33] sm:text-4xl">
+          Check mo ‘to
         </h2>
-        <p className="mt-1 text-sm font-semibold text-black/55">
-          Distances are measured from {originLabel}.
+        <p className="mt-1 text-xl font-semibold text-[#073d33]/76">
+          {results.length} match{results.length === 1 ? "" : "es"} found
         </p>
+        {originLabel !== campusCenterLabel && (
+          <p className="mt-1 text-sm font-bold text-[#073d33]/58">
+            Distances from {originLabel}.
+          </p>
+        )}
         {compareIds.length > 0 && (
-          <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-md border border-[#1f6f53]/20 bg-[#eef7ef] px-3 py-2">
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[#004b35]/15 bg-[#f6efda] px-4 py-3">
             <p className="text-sm font-black text-[#185840]">
               {compareIds.length}/4 selected for compare
             </p>
             {compareIds.length >= 2 ? (
               <Link
                 href={compareHref}
-                className="inline-flex h-9 items-center justify-center gap-2 rounded-md bg-[#171714] px-3 text-xs font-bold text-white transition hover:bg-[#2a2822]"
+                className="inline-flex h-9 items-center justify-center gap-2 rounded-full bg-[#004b35] px-4 text-xs font-black text-[#fffaf0] transition hover:bg-[#073d33]"
               >
                 <Scale size={14} aria-hidden="true" />
                 Open compare
@@ -482,116 +444,135 @@ function RecommendationsPanel({
         )}
       </div>
 
-      <div className="mt-4 space-y-3">
+      <div className="mt-4 space-y-3 lg:mt-6">
         {results.length === 0 ? (
-          <div className="rounded-lg border border-black/10 bg-white/70 p-4">
-            <p className="font-bold">No matching spots yet.</p>
-            <p className="mt-1 text-sm text-black/60">
+          <div className="rounded-xl border border-[#004b35]/15 bg-[#fffaf0] p-4 shadow-md">
+            <p className="font-black text-[#073d33]">No matching spots yet.</p>
+            <p className="mt-1 text-sm font-semibold text-[#073d33]/65">
               Try a menu item like sisig, burger, coffee, noodles, or budget.
             </p>
           </div>
         ) : (
-          results.map((place, index) => {
+          results.map((place) => {
             const isSelectedForCompare = compareIds.includes(place.id);
             const compareLimitReached =
               compareIds.length >= 4 && !isSelectedForCompare;
+            const primaryMatchedItem =
+              place.matchedMenuItems[0] ?? place.bestSeller.name;
 
             return (
               <article
                 key={place.id}
-                className="rounded-lg border border-black/10 bg-white/78 p-4 shadow-sm"
+                className="group relative overflow-hidden rounded-xl border border-[#004b35]/12 bg-[#fffaf0] py-3 pl-7 pr-4 shadow-[0_3px_8px_rgba(0,0,0,0.22)] transition hover:-translate-y-0.5 hover:shadow-[0_8px_18px_rgba(0,75,53,0.18)]"
               >
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#7b3320]">
-                    #{index + 1} result
-                  </p>
-                  <h3 className="mt-1 text-xl font-black">{place.name}</h3>
-                </div>
-                <span
-                  className={`rounded-md px-2 py-1 text-xs font-black uppercase tracking-[0.12em] ${
-                    place.openNow
-                      ? "bg-[#e8f5ea] text-[#1f6f53]"
-                      : "bg-[#f3e7df] text-[#7b3320]"
-                  }`}
-                >
-                  {place.openNow ? "Open now" : "Closed"}
-                </span>
-              </div>
+                <span className="absolute inset-y-0 left-0 w-2 bg-[#ffd400]" />
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <Link
+                      href={`/place/${place.id}`}
+                      className="block truncate text-2xl font-black leading-tight text-[#073d33] hover:underline"
+                    >
+                      {place.name}
+                    </Link>
+                    <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xl font-semibold leading-none text-[#416763]">
+                      <span className="inline-flex items-center gap-1">
+                        <Star
+                          size={17}
+                          fill="#ffd400"
+                          className="text-[#ffd400]"
+                          aria-hidden="true"
+                        />
+                        {place.rating.toFixed(1)}
+                      </span>
+                      <span aria-hidden="true">•</span>
+                      <span>{place.reviews} reviews</span>
+                    </div>
+                    <p className="mt-1 flex items-center gap-1 text-xl font-semibold leading-tight text-[#416763]">
+                      <MapPin size={18} aria-hidden="true" />
+                      {formatResultDistance(place.distanceKm)} away from you
+                    </p>
+                    <div className="mt-1 flex flex-wrap gap-1.5">
+                      <span className="rounded-full border border-[#ff9f1c] bg-[#ffe4bf] px-2 py-0.5 text-base font-semibold leading-none text-[#c86400]">
+                        {primaryMatchedItem.toLowerCase()}
+                      </span>
+                      <span className="rounded-full border border-[#7e8fb1] bg-[#eef3fb] px-2 py-0.5 text-base font-semibold leading-none text-[#41567d]">
+                        {place.openNow ? "open" : "closed"}
+                      </span>
+                    </div>
+                    <p className="mt-2 text-xl font-black leading-none text-[#416763]">
+                      {place.priceRange}
+                    </p>
+                  </div>
 
-              <div className="mt-3 flex gap-3">
-                <Image
-                  src={place.bestSeller.imageUrl}
-                  alt={place.bestSeller.name}
-                  width={80}
-                  height={80}
-                  className="h-20 w-20 shrink-0 rounded-md object-cover"
-                />
-                <div className="min-w-0 text-sm">
-                  <p className="font-bold text-black/70">
-                    Best sellers: {place.menuHighlights.slice(0, 2).join(", ")}
-                  </p>
-                  <p className="mt-1 font-semibold text-[#7b3320]">
-                    Matched: {place.matchedMenuItems.join(", ")}
-                  </p>
-                  <p className="mt-2 text-black/58">
-                    {place.distanceKm.toFixed(1)} km from {originLabel} -{" "}
-                    {place.priceRange}
-                  </p>
-                  <p className="mt-1 text-black/58">{place.hours}</p>
+                  <button
+                    type="button"
+                    onClick={() => onToggleCompare(place.id)}
+                    disabled={compareLimitReached}
+                    className={`grid size-9 shrink-0 place-items-center rounded-full transition disabled:cursor-not-allowed disabled:opacity-35 ${
+                      isSelectedForCompare
+                        ? "bg-[#004b35] text-[#fffaf0]"
+                        : "text-[#416763] hover:bg-[#004b35]/8 hover:text-[#004b35]"
+                    }`}
+                    aria-label={
+                      isSelectedForCompare
+                        ? `Remove ${place.name} from compare`
+                        : `Add ${place.name} to compare`
+                    }
+                  >
+                    <Heart
+                      size={21}
+                      fill={isSelectedForCompare ? "currentColor" : "none"}
+                      aria-hidden="true"
+                    />
+                  </button>
                 </div>
-              </div>
 
-              <div className="mt-4 grid grid-cols-3 gap-2">
-                <Link
-                  href={`/place/${place.id}`}
-                  className="inline-flex h-10 items-center justify-center gap-1 rounded-md border border-black/10 bg-white px-2 text-[11px] font-bold text-[#171714] transition hover:border-[#1f6f53]"
-                >
-                  <Eye size={14} aria-hidden="true" />
-                  View details
-                </Link>
-                <button
-                  type="button"
-                  onClick={() => onToggleCompare(place.id)}
-                  disabled={compareLimitReached}
-                  className={`inline-flex h-10 items-center justify-center gap-1 rounded-md border px-2 text-[11px] font-bold transition ${
-                    isSelectedForCompare
-                      ? "border-[#1f6f53] bg-[#eef7ef] text-[#185840]"
-                      : "border-black/10 bg-white text-[#171714] hover:border-[#1f6f53] disabled:cursor-not-allowed disabled:opacity-45"
-                  }`}
-                >
-                  <Plus size={14} aria-hidden="true" />
-                  {isSelectedForCompare ? "Added" : "Add to compare"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onGetDirections(place.id)}
-                  className="inline-flex h-10 items-center justify-center gap-1 rounded-md bg-[#1f6f53] px-2 text-[11px] font-bold text-white transition hover:bg-[#185840]"
-                >
-                  <Compass size={14} aria-hidden="true" />
-                  Get directions
-                </button>
-              </div>
-
-              {directionsPlaceId === place.id && (
-                <div className="mt-3 rounded-md border border-[#1f6f53]/25 bg-[#eef7ef] px-3 py-2 text-sm font-semibold text-[#185840]">
-                  {routeStatus === "loading" && "Drawing route on the map..."}
-                  {routeStatus === "ready" && routeInfo && (
-                    <>
-                      Route ready: {formatDistance(routeInfo.distanceMeters)} -{" "}
-                      {formatDuration(routeInfo.durationSeconds)}
-                    </>
-                  )}
-                  {routeStatus === "fallback" && routeInfo && (
-                    <>
-                      Direct route shown:{" "}
-                      {formatDistance(routeInfo.distanceMeters)} -{" "}
-                      {formatDuration(routeInfo.durationSeconds)}
-                    </>
-                  )}
-                  {routeStatus === "error" && "Route is unavailable right now."}
+                <div className="mt-3 grid grid-cols-3 gap-2 opacity-95 transition group-hover:opacity-100">
+                  <Link
+                    href={`/place/${place.id}`}
+                    className="inline-flex h-8 items-center justify-center gap-1 rounded-full border border-[#004b35]/15 bg-[#fffdf4] px-2 text-[11px] font-black text-[#073d33] transition hover:border-[#004b35]"
+                  >
+                    <Eye size={13} aria-hidden="true" />
+                    Details
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => onToggleCompare(place.id)}
+                    disabled={compareLimitReached}
+                    className="inline-flex h-8 items-center justify-center gap-1 rounded-full border border-[#004b35]/15 bg-[#fffdf4] px-2 text-[11px] font-black text-[#073d33] transition hover:border-[#004b35] disabled:cursor-not-allowed disabled:opacity-45"
+                  >
+                    <Scale size={13} aria-hidden="true" />
+                    {isSelectedForCompare ? "Added" : "Compare"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onGetDirections(place.id)}
+                    className="inline-flex h-8 items-center justify-center gap-1 rounded-full bg-[#004b35] px-2 text-[11px] font-black text-[#fffaf0] transition hover:bg-[#073d33]"
+                  >
+                    <Compass size={13} aria-hidden="true" />
+                    Route
+                  </button>
                 </div>
-              )}
+
+                {directionsPlaceId === place.id && (
+                  <div className="mt-3 rounded-lg border border-[#004b35]/18 bg-[#f6efda] px-3 py-2 text-sm font-bold text-[#073d33]">
+                    {routeStatus === "loading" && "Drawing route on the map..."}
+                    {routeStatus === "ready" && routeInfo && (
+                      <>
+                        Route ready: {formatDistance(routeInfo.distanceMeters)} -{" "}
+                        {formatDuration(routeInfo.durationSeconds)}
+                      </>
+                    )}
+                    {routeStatus === "fallback" && routeInfo && (
+                      <>
+                        Direct route shown:{" "}
+                        {formatDistance(routeInfo.distanceMeters)} -{" "}
+                        {formatDuration(routeInfo.durationSeconds)}
+                      </>
+                    )}
+                    {routeStatus === "error" && "Route is unavailable right now."}
+                  </div>
+                )}
               </article>
             );
           })
@@ -657,6 +638,14 @@ function formatDistance(meters: number) {
   }
 
   return `${(meters / 1000).toFixed(1)} km`;
+}
+
+function formatResultDistance(kilometers: number) {
+  if (kilometers < 1) {
+    return `${Math.max(50, Math.round((kilometers * 1000) / 50) * 50)}m`;
+  }
+
+  return `${kilometers.toFixed(1)}km`;
 }
 
 function formatDuration(seconds: number) {
