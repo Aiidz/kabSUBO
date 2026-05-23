@@ -12,13 +12,14 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { AuthUser } from "@/app/lib/api/kabsubo-api";
 import { clearStoredUser, getStoredUser } from "@/app/lib/auth/session";
 
 export function AccountMenu() {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isOpen, setIsOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     function refreshUser() {
@@ -36,9 +37,35 @@ export function AccountMenu() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    function closeOnOutsidePointer(event: PointerEvent) {
+      if (!menuRef.current?.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setIsOpen(false);
+      }
+    }
+
+    document.addEventListener("pointerdown", closeOnOutsidePointer);
+    document.addEventListener("keydown", closeOnEscape);
+
+    return () => {
+      document.removeEventListener("pointerdown", closeOnOutsidePointer);
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [isOpen]);
+
   if (!user) {
     return (
-      <div className="pointer-events-auto relative">
+      <div ref={menuRef} className="pointer-events-auto relative">
         <button
           type="button"
           onClick={() => setIsOpen((current) => !current)}
@@ -81,7 +108,7 @@ export function AccountMenu() {
   }
 
   return (
-    <div className="pointer-events-auto relative">
+    <div ref={menuRef} className="pointer-events-auto relative">
       <button
         type="button"
         onClick={() => setIsOpen((current) => !current)}
