@@ -13,7 +13,7 @@ export function AppNavbar() {
     <header className="pointer-events-none fixed inset-x-0 top-0 z-50 flex items-center justify-between px-4 py-4 sm:px-8 sm:py-6">
       <Link
         href="/"
-        className="pointer-events-auto grid size-16 place-items-center rounded-lg transition hover:scale-[1.03] sm:size-20"
+        className="pointer-events-auto grid size-20 place-items-center rounded-lg transition hover:scale-[1.03] sm:size-24"
         aria-label="kabSUBO home"
       >
         <Image
@@ -22,7 +22,7 @@ export function AppNavbar() {
           width={160}
           height={160}
           priority
-          className="size-14 object-contain sm:size-16"
+          className="size-16 object-contain sm:size-20"
         />
       </Link>
 
