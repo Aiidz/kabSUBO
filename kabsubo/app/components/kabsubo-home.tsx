@@ -219,6 +219,8 @@ export function KabsuboHome({ initialQuery = "" }: { initialQuery?: string }) {
 
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(12,18,15,0.54),rgba(12,18,15,0.12)_46%,rgba(12,18,15,0.08)),linear-gradient(180deg,rgba(12,18,15,0.18),rgba(12,18,15,0)_38%,rgba(12,18,15,0.2))]" />
 
+      <BrandMark />
+
       <Link
         href="/submit"
         className="pointer-events-auto absolute right-3 top-3 z-30 inline-flex h-11 items-center justify-center gap-2 rounded-md border border-white/55 bg-white/84 px-4 text-sm font-black text-[#171714] shadow-2xl backdrop-blur-xl transition hover:border-[#1f6f53] sm:right-6 sm:top-6"
@@ -285,7 +287,7 @@ function LandingSearchCard({
   onUseLocation: () => void;
 }) {
   return (
-    <section className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-start px-4 py-5 sm:px-8 sm:py-8 lg:min-h-screen lg:items-center lg:px-14">
+    <section className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-start px-4 pb-5 pt-24 sm:px-8 sm:pb-8 sm:pt-28 lg:min-h-screen lg:items-center lg:px-14 lg:py-8">
       <form
         onSubmit={onSubmit}
         className="pointer-events-auto w-full max-w-[520px] rounded-lg border border-white/55 bg-white/72 p-4 shadow-2xl backdrop-blur-xl sm:p-5"
@@ -356,6 +358,25 @@ function LandingSearchCard({
         )}
       </form>
     </section>
+  );
+}
+
+function BrandMark() {
+  return (
+    <Link
+      href="/"
+      className="pointer-events-auto absolute left-3 top-3 z-40 grid size-[76px] place-items-center rounded-lg border border-[#ffc400]/30 bg-[#004b35] shadow-2xl transition hover:scale-[1.03] sm:left-6 sm:top-6 sm:size-[88px]"
+      aria-label="kabSUBO home"
+    >
+      <Image
+        src="/brand/kabsubo-logo.png"
+        alt="kabSUBO logo"
+        width={245}
+        height={220}
+        priority
+        className="h-[58px] w-[64px] object-contain sm:h-[68px] sm:w-[76px]"
+      />
+    </Link>
   );
 }
 
