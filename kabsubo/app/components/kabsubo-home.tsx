@@ -2,10 +2,10 @@
 
 import {
   ArrowLeft,
+  Bot,
   Compass,
   Eye,
   LocateFixed,
-  MapPin,
   Plus,
   Scale,
   Search,
@@ -215,7 +215,7 @@ export function KabsuboHome({ initialQuery = "" }: { initialQuery?: string }) {
         onSelectPlace={setSelectedPlaceId}
       />
 
-      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(12,18,15,0.54),rgba(12,18,15,0.12)_46%,rgba(12,18,15,0.08)),linear-gradient(180deg,rgba(12,18,15,0.18),rgba(12,18,15,0)_38%,rgba(12,18,15,0.2))]" />
+      <div className="pointer-events-none absolute inset-0 bg-[#fffaf0]/42" />
 
       {hasSubmitted ? (
         <CompactMapSearch
@@ -228,7 +228,6 @@ export function KabsuboHome({ initialQuery = "" }: { initialQuery?: string }) {
         />
       ) : (
         <LandingSearchCard
-          approvedCount={approvedPlaces.length}
           locationState={locationState}
           locationNotice={locationNotice}
           query={query}
@@ -237,6 +236,8 @@ export function KabsuboHome({ initialQuery = "" }: { initialQuery?: string }) {
           onUseLocation={handleUseLocation}
         />
       )}
+
+      {!hasSubmitted && <HomeFloatingActions />}
 
       {hasSubmitted && (
         <RecommendationsPanel
@@ -256,7 +257,6 @@ export function KabsuboHome({ initialQuery = "" }: { initialQuery?: string }) {
 }
 
 function LandingSearchCard({
-  approvedCount,
   locationState,
   locationNotice,
   query,
@@ -264,7 +264,6 @@ function LandingSearchCard({
   onSubmit,
   onUseLocation,
 }: {
-  approvedCount: number;
   locationState: LocationState;
   locationNotice: string | null;
   query: string;
@@ -273,77 +272,85 @@ function LandingSearchCard({
   onUseLocation: () => void;
 }) {
   return (
-    <section className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-start px-4 pb-5 pt-24 sm:px-8 sm:pb-8 sm:pt-28 lg:min-h-screen lg:items-center lg:px-14 lg:py-8">
+    <section className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center px-4 pt-24 sm:px-8 sm:pt-28">
       <form
         onSubmit={onSubmit}
-        className="pointer-events-auto w-full max-w-[520px] rounded-lg border border-white/55 bg-white/72 p-4 shadow-2xl backdrop-blur-xl sm:p-5"
+        className="pointer-events-auto w-full max-w-[460px] rounded-[18px] border-2 border-[#004b35] bg-[#fffaf0]/96 px-7 py-7 shadow-[0_16px_36px_rgba(0,75,53,0.16)] sm:px-8"
       >
-        <div className="mb-5 flex items-center justify-between gap-4">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-[0.26em] text-[#7b3320]">
-              kabSUBO
-            </p>
-            <p className="mt-1 text-sm font-semibold text-black/55">
-              CvSU Main Campus, Indang, Cavite
-            </p>
-          </div>
-          <span className="grid size-10 place-items-center rounded-lg bg-[#1f6f53] text-white shadow-lg">
-            <MapPin size={19} aria-hidden="true" />
-          </span>
-        </div>
+        <h1 className="text-center text-3xl font-black tracking-normal text-[#073d33] sm:text-4xl">
+          Anong Cravings Today
+        </h1>
 
-        <label htmlFor="craving" className="block">
-          <span className="block text-4xl font-black leading-[1.02] tracking-normal text-[#171714] sm:text-5xl">
-            What do you want to eat?
-          </span>
+        <label
+          htmlFor="craving"
+          className="mt-7 block text-base font-black text-[#073d33]"
+        >
+          Cravings
         </label>
 
-        <div className="mt-5 flex items-center gap-3 rounded-lg border border-white/70 bg-white/80 px-4 shadow-inner">
-          <Search size={19} className="text-[#7b3320]" aria-hidden="true" />
+        <div className="mt-1 flex h-10 items-center rounded-md border border-[#004b35] bg-[#fffdf4] px-3">
           <input
             id="craving"
             value={query}
             onChange={(event) => onQueryChange(event.target.value)}
-            className="h-14 min-w-0 flex-1 bg-transparent text-base font-semibold outline-none placeholder:text-black/42"
-            placeholder="Sisig, coffee, burger, noodles..."
+            className="min-w-0 flex-1 bg-transparent text-lg font-semibold text-[#073d33] outline-none placeholder:text-[#073d33]/70"
+            placeholder="sisig, burger, chicken, ..."
           />
-          <button
-            type="submit"
-            className="h-9 rounded-md bg-[#171714] px-3 text-sm font-bold text-white transition hover:bg-[#2a2822]"
-          >
-            Search
-          </button>
+          <Search size={20} className="shrink-0 text-[#073d33]/75" aria-hidden="true" />
         </div>
 
-        <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <button
-            type="button"
-            onClick={onUseLocation}
-            className="inline-flex h-11 items-center justify-center gap-2 rounded-md bg-[#1f6f53] px-4 text-sm font-bold text-white shadow-lg transition hover:bg-[#185840]"
-          >
-            <LocateFixed size={17} aria-hidden="true" />
-            Use my location
-          </button>
-
-          <p className="text-sm font-semibold text-black/58">
-            {locationState === "locating"
-              ? "Finding your location..."
-              : locationState === "found"
-                ? "Using your current location"
-                : locationState === "outside-range"
-                  ? "Outside CvSU area"
+        <button
+          type="button"
+          onClick={onUseLocation}
+          className="mt-4 inline-flex items-center gap-2 text-base font-bold text-[#073d33]/78 transition hover:text-[#004b35]"
+        >
+          <LocateFixed size={18} aria-hidden="true" />
+          {locationState === "locating"
+            ? "Finding your location..."
+            : locationState === "found"
+              ? "Using your location"
+              : locationState === "outside-range"
+                ? "Outside CvSU area"
                 : locationState === "fallback"
                   ? "Using campus center"
-                  : `${approvedCount} approved spots nearby`}
-          </p>
-        </div>
+                  : "Use my location"}
+        </button>
+
+        <button
+          type="submit"
+          className="mx-auto mt-7 flex h-10 w-full max-w-60 items-center justify-center rounded-full bg-[#004b35] text-lg font-black text-[#fffaf0] shadow-sm transition hover:bg-[#073d33]"
+        >
+          Search
+        </button>
+
         {locationNotice && (
-          <p className="mt-3 rounded-md border border-[#7b3320]/20 bg-[#fff4e7] px-3 py-2 text-sm font-semibold leading-5 text-[#7b3320]">
+          <p className="mt-4 rounded-md border border-[#004b35]/16 bg-[#f6efda] px-3 py-2 text-sm font-bold leading-5 text-[#073d33]">
             {locationNotice}
           </p>
         )}
       </form>
     </section>
+  );
+}
+
+function HomeFloatingActions() {
+  return (
+    <div className="absolute bottom-6 right-6 z-40 flex flex-col items-center gap-4 sm:bottom-8 sm:right-8">
+      <button
+        type="button"
+        className="grid size-14 place-items-center rounded-full border border-[#004b35] bg-[#fffaf0] text-[#004b35] shadow-2xl transition hover:-translate-y-0.5 hover:bg-[#fff6dd]"
+        aria-label="Open chatbot"
+      >
+        <Bot size={26} aria-hidden="true" />
+      </button>
+      <Link
+        href="/submit"
+        className="grid size-14 place-items-center rounded-full bg-[#004b35] text-[#fffaf0] shadow-2xl transition hover:-translate-y-0.5 hover:bg-[#073d33]"
+        aria-label="Add a place"
+      >
+        <Plus size={32} strokeWidth={1.8} aria-hidden="true" />
+      </Link>
+    </div>
   );
 }
 

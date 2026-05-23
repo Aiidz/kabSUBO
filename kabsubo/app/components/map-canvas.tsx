@@ -102,11 +102,6 @@ export function MapCanvas({
 
     setMapReady(true);
 
-    mapRef.current.addControl(
-      new maplibregl.NavigationControl({ visualizePitch: true }),
-      "bottom-right",
-    );
-
     return () => {
       markersRef.current.forEach(cleanupMarkerInstance);
       markersRef.current = [];
