@@ -32,7 +32,7 @@ export type FoodPlace = {
     body: string;
     date: string;
   }>;
-  status: "approved" | "sample";
+  status: "approved" | "pending" | "rejected";
 };
 
 export const campusCenter: [number, number] = [120.8807, 14.1959];

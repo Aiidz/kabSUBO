@@ -118,7 +118,7 @@ export const placesApi = {
         id: slugify(input.name),
         rating: 0,
         reviews: 0,
-        status: "sample",
+        status: "pending",
       };
 
       mockPlaces = [...mockPlaces, place];
@@ -456,7 +456,7 @@ export const submissionsApi = {
       );
       mockPlaces = mockPlaces.map((place) =>
         place.id === submission.placeId
-          ? { ...place, status: status === "approved" ? "approved" : "sample" }
+          ? { ...place, status }
           : place,
       );
 
