@@ -27,6 +27,12 @@ import {
 } from "@/app/data/places";
 import { favoritesApi, type AuthUser } from "@/app/lib/api/kabsubo-api";
 import { getStoredUser } from "@/app/lib/auth/session";
+import {
+  createChatMessage,
+  createComparisonPrompt,
+  createKabsuboReply,
+  type ChatMessage,
+} from "@/app/lib/chatbot/kabsubo-rag";
 import { MapCanvas, type Coordinates } from "@/app/components/map-canvas";
 
 type LocationState =
@@ -72,6 +78,7 @@ export function KabsuboHome({ initialQuery = "" }: { initialQuery?: string }) {
   );
   const [isChatbotOpen, setIsChatbotOpen] = useState(false);
   const [chatInput, setChatInput] = useState("");
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
 
   useEffect(() => {
     function refreshUser() {
@@ -132,6 +139,15 @@ export function KabsuboHome({ initialQuery = "" }: { initialQuery?: string }) {
         openNow: isOpenNow(place.hours),
       }));
   }, [origin, submittedQuery]);
+  const chatbotPlaces = useMemo(
+    () =>
+      approvedPlaces.map((place) => ({
+        ...place,
+        distanceKm: getDistanceKm(origin, place.coordinates),
+        openNow: isOpenNow(place.hours),
+      })),
+    [approvedPlaces, origin],
+  );
 
   const matchingPlaceIds = rankedResults.map((place) => place.id);
   const hasSubmitted = submittedQuery.trim().length > 0;
@@ -274,9 +290,22 @@ export function KabsuboHome({ initialQuery = "" }: { initialQuery?: string }) {
 
   function handleOpenChatbot(placeId?: string) {
     if (placeId) {
-      setCompareIds((currentIds) =>
-        currentIds.includes(placeId) ? currentIds : [...currentIds, placeId],
-      );
+      const nextCompareIds = compareIds.includes(placeId)
+        ? compareIds
+        : [...compareIds, placeId].slice(0, 4);
+      const prompt = createComparisonPrompt(placeId, chatbotPlaces);
+      const reply = createKabsuboReply({
+        message: prompt,
+        originLabel,
+        places: chatbotPlaces,
+        selectedPlaceIds: nextCompareIds,
+      });
+
+      setCompareIds(nextCompareIds);
+      setChatMessages((currentMessages) => [
+        ...currentMessages,
+        createChatMessage("assistant", reply),
+      ]);
     }
 
     if (!hasSubmitted) {
@@ -291,6 +320,25 @@ export function KabsuboHome({ initialQuery = "" }: { initialQuery?: string }) {
 
   function handleSendChatbotMessage(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    const nextMessage = chatInput.trim();
+
+    if (!nextMessage) {
+      return;
+    }
+
+    const reply = createKabsuboReply({
+      message: nextMessage,
+      originLabel,
+      places: chatbotPlaces,
+      selectedPlaceIds: compareIds,
+    });
+
+    setChatMessages((currentMessages) => [
+      ...currentMessages,
+      createChatMessage("user", nextMessage),
+      createChatMessage("assistant", reply),
+    ]);
     setChatInput("");
   }
 
@@ -338,6 +386,7 @@ export function KabsuboHome({ initialQuery = "" }: { initialQuery?: string }) {
           activeDetailPlaceId={activeDetailPlaceId}
           isChatbotOpen={isChatbotOpen}
           chatInput={chatInput}
+          chatMessages={chatMessages}
           onOpenPlaceDetail={handleOpenPlaceDetail}
           onToggleFavorite={handleToggleFavorite}
           onOpenChatbot={handleOpenChatbot}
@@ -500,6 +549,7 @@ function RecommendationsPanel({
   activeDetailPlaceId,
   isChatbotOpen,
   chatInput,
+  chatMessages,
   onOpenPlaceDetail,
   onToggleFavorite,
   onOpenChatbot,
@@ -518,6 +568,7 @@ function RecommendationsPanel({
   activeDetailPlaceId: string | null;
   isChatbotOpen: boolean;
   chatInput: string;
+  chatMessages: ChatMessage[];
   onOpenPlaceDetail: (placeId: string) => void;
   onToggleFavorite: (placeId: string) => void;
   onOpenChatbot: (placeId?: string) => void;
@@ -533,6 +584,7 @@ function RecommendationsPanel({
       {isChatbotOpen ? (
         <ChatbotPanel
           chatInput={chatInput}
+          messages={chatMessages}
           onChatInputChange={onChatInputChange}
           onSendChatbotMessage={onSendChatbotMessage}
         />
@@ -568,7 +620,7 @@ function RecommendationsPanel({
               {compareIds.length}/4 sent to chatbot
             </p>
             <span className="text-xs font-bold uppercase tracking-[0.14em] text-[#7b3320]">
-              Chatbot placeholder
+              Ready for comparison
             </span>
           </div>
         )}
@@ -973,10 +1025,12 @@ function PlaceDetailPanel({
 
 function ChatbotPanel({
   chatInput,
+  messages,
   onChatInputChange,
   onSendChatbotMessage,
 }: {
   chatInput: string;
+  messages: ChatMessage[];
   onChatInputChange: (message: string) => void;
   onSendChatbotMessage: (event: FormEvent<HTMLFormElement>) => void;
 }) {
@@ -1001,7 +1055,34 @@ function ChatbotPanel({
           </p>
         </div>
 
-        <div className="mt-auto min-h-44 pt-10" aria-label="Chat messages" />
+        <div
+          className="mt-auto max-h-[44vh] min-h-44 space-y-3 overflow-y-auto pt-10"
+          aria-label="Chat messages"
+        >
+          {messages.length === 0 ? (
+            <div className="rounded-xl border border-[#004b35]/15 bg-[#f6efda] px-4 py-3 text-sm font-semibold leading-5 text-[#416763]">
+              Ask about nearest places, most liked spots, budget meals, open
+              places, or compare the places you picked.
+            </div>
+          ) : (
+            messages.map((message) => (
+              <div
+                key={message.id}
+                className={`max-w-[88%] rounded-xl border px-4 py-3 text-sm font-semibold leading-5 shadow-sm ${
+                  message.role === "user"
+                    ? "ml-auto border-[#004b35] bg-[#fffdf4] text-[#073d33]"
+                    : "mr-auto border-[#ffd400]/60 bg-[#fff8d7] text-[#073d33]"
+                }`}
+              >
+                {message.text.split("\n").map((line, index) => (
+                  <p key={`${message.id}-${index}`} className={index > 0 ? "mt-2" : ""}>
+                    {line}
+                  </p>
+                ))}
+              </div>
+            ))
+          )}
+        </div>
 
         <form
           onSubmit={onSendChatbotMessage}
