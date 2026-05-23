@@ -6,7 +6,6 @@ import {
   LogIn,
   LogOut,
   Shield,
-  UserRound,
 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -35,29 +34,20 @@ export function AccountMenu() {
     return (
       <Link
         href="/auth"
-        className="pointer-events-auto absolute right-3 top-16 z-30 inline-flex h-11 items-center justify-center gap-2 rounded-md border border-white/55 bg-white/84 px-4 text-sm font-black text-[#171714] shadow-2xl backdrop-blur-xl transition hover:border-[#1f6f53] sm:right-6 sm:top-20"
+        className="pointer-events-auto grid size-12 place-items-center rounded-full bg-[#004b35] text-[#fffaf0] shadow-2xl ring-2 ring-[#fffaf0]/70 transition hover:scale-105 sm:size-14"
+        aria-label="Sign in"
       >
-        <LogIn size={17} aria-hidden="true" />
-        Sign in
+        <LogIn size={20} aria-hidden="true" />
       </Link>
     );
   }
 
   return (
-    <div className="pointer-events-auto absolute right-3 top-16 z-30 flex max-w-[260px] items-center gap-2 rounded-lg border border-white/55 bg-white/86 p-2 shadow-2xl backdrop-blur-xl sm:right-6 sm:top-20">
-      <span className="grid size-9 shrink-0 place-items-center rounded-md bg-[#1f6f53] text-white">
-        <UserRound size={17} aria-hidden="true" />
-      </span>
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-black">{user.name}</p>
-        <p className="text-xs font-bold uppercase tracking-[0.12em] text-black/45">
-          {user.role}
-        </p>
-      </div>
+    <div className="pointer-events-auto flex items-center gap-2 rounded-full bg-[#fffaf0]/88 p-1.5 shadow-2xl ring-1 ring-[#004b35]/12 backdrop-blur-xl">
       {user.role === "admin" && (
         <Link
           href="/admin"
-          className="grid size-9 place-items-center rounded-md border border-black/10 bg-white text-[#7b3320] transition hover:border-[#1f6f53]"
+          className="grid size-9 place-items-center rounded-full text-[#004b35] transition hover:bg-[#004b35]/10"
           aria-label="Open admin moderation"
         >
           <Shield size={16} aria-hidden="true" />
@@ -65,22 +55,26 @@ export function AccountMenu() {
       )}
       <Link
         href="/my/submissions"
-        className="grid size-9 place-items-center rounded-md border border-black/10 bg-white text-[#171714] transition hover:border-[#1f6f53]"
+        className="grid size-9 place-items-center rounded-full text-[#004b35] transition hover:bg-[#004b35]/10"
         aria-label="Open my submissions"
       >
         <FileClock size={16} aria-hidden="true" />
       </Link>
       <Link
         href="/favorites"
-        className="grid size-9 place-items-center rounded-md border border-black/10 bg-white text-[#7b3320] transition hover:border-[#1f6f53]"
+        className="grid size-9 place-items-center rounded-full text-[#004b35] transition hover:bg-[#004b35]/10"
         aria-label="Open favorites"
       >
         <Heart size={16} aria-hidden="true" />
       </Link>
+      <span className="grid size-10 shrink-0 place-items-center rounded-full bg-[#004b35] text-sm font-black text-[#fffaf0]">
+        {user.name.charAt(0).toUpperCase()}
+        <span className="sr-only">{user.name}</span>
+      </span>
       <button
         type="button"
         onClick={() => void clearStoredUser()}
-        className="grid size-9 place-items-center rounded-md border border-black/10 bg-white text-[#171714] transition hover:border-[#7b3320]"
+        className="grid size-9 place-items-center rounded-full text-[#004b35] transition hover:bg-[#004b35]/10"
         aria-label="Sign out"
       >
         <LogOut size={16} aria-hidden="true" />

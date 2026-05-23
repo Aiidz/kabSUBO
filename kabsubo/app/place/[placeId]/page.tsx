@@ -53,7 +53,7 @@ export default async function PlaceDetailPage({ params }: PlacePageProps) {
   const distanceKm = getDistanceKm(campusCenter, place.coordinates);
 
   return (
-    <main className="min-h-screen bg-[#f6f3ec] text-[#171714]">
+    <main className="min-h-screen bg-[#f6f3ec] pt-24 text-[#171714]">
       <section className="relative min-h-[420px] overflow-hidden bg-[#171714] text-white">
         <Image
           src={place.bestSeller.imageUrl}

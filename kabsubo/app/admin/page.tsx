@@ -57,7 +57,7 @@ export default function AdminPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#f6f3ec] px-5 py-6 text-[#171714]">
+    <main className="min-h-screen bg-[#f6f3ec] px-5 pb-6 pt-28 text-[#171714]">
       <section className="mx-auto max-w-5xl">
         <Link
           href="/"

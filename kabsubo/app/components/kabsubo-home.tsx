@@ -9,7 +9,6 @@ import {
   Plus,
   Scale,
   Search,
-  Store,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -22,7 +21,6 @@ import {
   rankPlaces,
   type RankedPlace,
 } from "@/app/data/places";
-import { AccountMenu } from "@/app/components/account/account-menu";
 import { MapCanvas, type Coordinates } from "@/app/components/map-canvas";
 
 type LocationState =
@@ -219,18 +217,6 @@ export function KabsuboHome({ initialQuery = "" }: { initialQuery?: string }) {
 
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(12,18,15,0.54),rgba(12,18,15,0.12)_46%,rgba(12,18,15,0.08)),linear-gradient(180deg,rgba(12,18,15,0.18),rgba(12,18,15,0)_38%,rgba(12,18,15,0.2))]" />
 
-      <BrandMark />
-
-      <Link
-        href="/submit"
-        className="pointer-events-auto absolute right-3 top-3 z-30 inline-flex h-11 items-center justify-center gap-2 rounded-md border border-white/55 bg-white/84 px-4 text-sm font-black text-[#171714] shadow-2xl backdrop-blur-xl transition hover:border-[#1f6f53] sm:right-6 sm:top-6"
-      >
-        <Store size={17} aria-hidden="true" />
-        Add a place
-      </Link>
-
-      <AccountMenu />
-
       {hasSubmitted ? (
         <CompactMapSearch
           query={query}
@@ -361,25 +347,6 @@ function LandingSearchCard({
   );
 }
 
-function BrandMark() {
-  return (
-    <Link
-      href="/"
-      className="pointer-events-auto absolute left-3 top-3 z-40 grid size-[76px] place-items-center rounded-lg border border-[#ffc400]/30 bg-[#004b35] shadow-2xl transition hover:scale-[1.03] sm:left-6 sm:top-6 sm:size-[88px]"
-      aria-label="kabSUBO home"
-    >
-      <Image
-        src="/brand/kabsubo-logo.png"
-        alt="kabSUBO logo"
-        width={245}
-        height={220}
-        priority
-        className="h-[58px] w-[64px] object-contain sm:h-[68px] sm:w-[76px]"
-      />
-    </Link>
-  );
-}
-
 function CompactMapSearch({
   query,
   locationLabel,
@@ -396,7 +363,7 @@ function CompactMapSearch({
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
 }) {
   return (
-    <section className="pointer-events-none absolute inset-x-3 top-3 z-30 sm:left-6 sm:right-auto sm:top-6 sm:w-[500px]">
+    <section className="pointer-events-none absolute inset-x-3 top-24 z-30 sm:left-6 sm:right-auto sm:top-28 sm:w-[500px]">
       <form
         onSubmit={onSubmit}
         className="pointer-events-auto rounded-lg border border-white/55 bg-white/84 p-2 shadow-2xl backdrop-blur-xl"
