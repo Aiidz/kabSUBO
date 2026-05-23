@@ -17,7 +17,7 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import {
   campusCenter,
   foodPlaces,
@@ -25,6 +25,8 @@ import {
   rankPlaces,
   type RankedPlace,
 } from "@/app/data/places";
+import { favoritesApi, type AuthUser } from "@/app/lib/api/kabsubo-api";
+import { getStoredUser } from "@/app/lib/auth/session";
 import { MapCanvas, type Coordinates } from "@/app/components/map-canvas";
 
 type LocationState =
@@ -61,10 +63,43 @@ export function KabsuboHome({ initialQuery = "" }: { initialQuery?: string }) {
   const [routeStatus, setRouteStatus] = useState<RouteStatus>("idle");
   const [routeInfo, setRouteInfo] = useState<RouteInfo | null>(null);
   const [compareIds, setCompareIds] = useState<string[]>([]);
+  const [currentUser, setCurrentUser] = useState<AuthUser | null>(() =>
+    getStoredUser(),
+  );
+  const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
   const [activeDetailPlaceId, setActiveDetailPlaceId] = useState<string | null>(
     null,
   );
-  const [chatbotNotice, setChatbotNotice] = useState<string | null>(null);
+
+  useEffect(() => {
+    function refreshUser() {
+      const nextUser = getStoredUser();
+      setCurrentUser(nextUser);
+
+      if (!nextUser) {
+        setFavoriteIds([]);
+      }
+    }
+
+    window.addEventListener("kabsubo-auth-change", refreshUser);
+    window.addEventListener("storage", refreshUser);
+
+    return () => {
+      window.removeEventListener("kabsubo-auth-change", refreshUser);
+      window.removeEventListener("storage", refreshUser);
+    };
+  }, []);
+
+  useEffect(() => {
+    async function loadFavorites(user: AuthUser) {
+      const result = await favoritesApi.list(user.id);
+      setFavoriteIds(result.data.map((place) => place.id));
+    }
+
+    if (currentUser) {
+      void loadFavorites(currentUser);
+    }
+  }, [currentUser]);
 
   const usableUserLocation = locationState === "found" ? userLocation : null;
   const origin = usableUserLocation ?? campusCenter;
@@ -110,7 +145,6 @@ export function KabsuboHome({ initialQuery = "" }: { initialQuery?: string }) {
 
     setSubmittedQuery(nextQuery);
     setActiveDetailPlaceId(null);
-    setChatbotNotice(null);
 
     const nextTopResult = rankPlaces(nextQuery).find(
       (place) => place.status === "approved" && place.matchScore > 0,
@@ -127,7 +161,6 @@ export function KabsuboHome({ initialQuery = "" }: { initialQuery?: string }) {
     setRouteInfo(null);
     setRouteStatus("idle");
     setActiveDetailPlaceId(null);
-    setChatbotNotice(null);
     router.push("/");
   }
 
@@ -203,16 +236,40 @@ export function KabsuboHome({ initialQuery = "" }: { initialQuery?: string }) {
 
   function handleOpenPlaceDetail(placeId: string) {
     setActiveDetailPlaceId(placeId);
-    setChatbotNotice(null);
     void handleGetDirections(placeId);
   }
 
-  function handleOpenChatbot(placeId: string, placeName: string) {
+  async function handleToggleFavorite(placeId: string) {
+    if (!currentUser) {
+      return;
+    }
+
+    const isFavorite = favoriteIds.includes(placeId);
+    setFavoriteIds((currentIds) =>
+      isFavorite
+        ? currentIds.filter((currentId) => currentId !== placeId)
+        : [...currentIds, placeId],
+    );
+
+    try {
+      if (isFavorite) {
+        await favoritesApi.remove({ placeId, userId: currentUser.id });
+        return;
+      }
+
+      await favoritesApi.add({ placeId, userId: currentUser.id });
+    } catch {
+      setFavoriteIds((currentIds) =>
+        isFavorite
+          ? [...currentIds, placeId]
+          : currentIds.filter((currentId) => currentId !== placeId),
+      );
+    }
+  }
+
+  function handleOpenChatbot(placeId: string) {
     setCompareIds((currentIds) =>
       currentIds.includes(placeId) ? currentIds : [...currentIds, placeId],
-    );
-    setChatbotNotice(
-      `Chatbot comparison for ${placeName} will be finalized later.`,
     );
   }
 
@@ -253,9 +310,10 @@ export function KabsuboHome({ initialQuery = "" }: { initialQuery?: string }) {
           routeInfo={routeInfo}
           routeStatus={routeStatus}
           compareIds={compareIds}
+          favoriteIds={favoriteIds}
           activeDetailPlaceId={activeDetailPlaceId}
-          chatbotNotice={chatbotNotice}
           onOpenPlaceDetail={handleOpenPlaceDetail}
+          onToggleFavorite={handleToggleFavorite}
           onOpenChatbot={handleOpenChatbot}
           onBackToResults={() => setActiveDetailPlaceId(null)}
           onGetDirections={handleGetDirections}
@@ -403,9 +461,10 @@ function RecommendationsPanel({
   routeInfo,
   routeStatus,
   compareIds,
+  favoriteIds,
   activeDetailPlaceId,
-  chatbotNotice,
   onOpenPlaceDetail,
+  onToggleFavorite,
   onOpenChatbot,
   onBackToResults,
   onGetDirections,
@@ -416,10 +475,11 @@ function RecommendationsPanel({
   routeInfo: RouteInfo | null;
   routeStatus: RouteStatus;
   compareIds: string[];
+  favoriteIds: string[];
   activeDetailPlaceId: string | null;
-  chatbotNotice: string | null;
   onOpenPlaceDetail: (placeId: string) => void;
-  onOpenChatbot: (placeId: string, placeName: string) => void;
+  onToggleFavorite: (placeId: string) => void;
+  onOpenChatbot: (placeId: string) => void;
   onBackToResults: () => void;
   onGetDirections: (placeId: string) => void;
 }) {
@@ -434,7 +494,9 @@ function RecommendationsPanel({
           directionsPlaceId={directionsPlaceId}
           routeInfo={routeInfo}
           routeStatus={routeStatus}
+          isFavorite={favoriteIds.includes(activeDetailPlace.id)}
           onBackToResults={onBackToResults}
+          onToggleFavorite={onToggleFavorite}
           onGetDirections={onGetDirections}
         />
       ) : (
@@ -461,11 +523,6 @@ function RecommendationsPanel({
             </span>
           </div>
         )}
-        {chatbotNotice && (
-          <p className="mt-3 rounded-xl border border-[#004b35]/15 bg-[#f6efda] px-4 py-3 text-sm font-bold text-[#073d33]">
-            {chatbotNotice}
-          </p>
-        )}
       </div>
 
       <div className="mt-4 space-y-3 lg:mt-5">
@@ -478,7 +535,7 @@ function RecommendationsPanel({
           </div>
         ) : (
           results.map((place) => {
-            const isSelectedForCompare = compareIds.includes(place.id);
+            const isFavorite = favoriteIds.includes(place.id);
             const primaryMatchedItem =
               place.matchedMenuItems[0] ?? place.bestSeller.name;
 
@@ -536,22 +593,22 @@ function RecommendationsPanel({
                     type="button"
                     onClick={(event) => {
                       event.stopPropagation();
-                      onOpenChatbot(place.id, place.name);
+                      void onToggleFavorite(place.id);
                     }}
                     className={`grid size-8 shrink-0 place-items-center rounded-full transition disabled:cursor-not-allowed disabled:opacity-35 ${
-                      isSelectedForCompare
+                      isFavorite
                         ? "bg-[#004b35] text-[#fffaf0]"
                         : "text-[#416763] hover:bg-[#004b35]/8 hover:text-[#004b35]"
                     }`}
                     aria-label={
-                      isSelectedForCompare
-                        ? `Open chatbot comparison for ${place.name}`
-                        : `Compare ${place.name} in chatbot`
+                      isFavorite
+                        ? `Remove ${place.name} from favorites`
+                        : `Add ${place.name} to favorites`
                     }
                   >
                     <Heart
                       size={19}
-                      fill={isSelectedForCompare ? "currentColor" : "none"}
+                      fill={isFavorite ? "currentColor" : "none"}
                       aria-hidden="true"
                     />
                   </button>
@@ -562,7 +619,7 @@ function RecommendationsPanel({
                     type="button"
                     onClick={(event) => {
                       event.stopPropagation();
-                      onOpenChatbot(place.id, place.name);
+                      onOpenChatbot(place.id);
                     }}
                     className="inline-flex h-7 items-center justify-center gap-1 rounded-full border border-[#004b35]/15 bg-[#fffdf4] px-2 text-[10px] font-black text-[#073d33] transition hover:border-[#004b35] disabled:cursor-not-allowed disabled:opacity-45"
                   >
@@ -606,14 +663,18 @@ function PlaceDetailPanel({
   directionsPlaceId,
   routeInfo,
   routeStatus,
+  isFavorite,
   onBackToResults,
+  onToggleFavorite,
   onGetDirections,
 }: {
   place: RankedPlace & { distanceKm: number; openNow: boolean };
   directionsPlaceId: string | null;
   routeInfo: RouteInfo | null;
   routeStatus: RouteStatus;
+  isFavorite: boolean;
   onBackToResults: () => void;
+  onToggleFavorite: (placeId: string) => void;
   onGetDirections: (placeId: string) => void;
 }) {
   const menuByCategory = groupMenuByCategory(place.menuItems);
@@ -689,7 +750,26 @@ function PlaceDetailPanel({
               </span>
             </p>
           </div>
-          <Heart size={22} className="mt-1 shrink-0 text-[#416763]" aria-hidden="true" />
+          <button
+            type="button"
+            onClick={() => void onToggleFavorite(place.id)}
+            className={`mt-1 grid size-9 shrink-0 place-items-center rounded-full transition ${
+              isFavorite
+                ? "bg-[#004b35] text-[#fffaf0]"
+                : "text-[#416763] hover:bg-[#004b35]/8 hover:text-[#004b35]"
+            }`}
+            aria-label={
+              isFavorite
+                ? `Remove ${place.name} from favorites`
+                : `Add ${place.name} to favorites`
+            }
+          >
+            <Heart
+              size={22}
+              fill={isFavorite ? "currentColor" : "none"}
+              aria-hidden="true"
+            />
+          </button>
         </div>
 
         <DetailDivider />
