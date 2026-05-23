@@ -70,6 +70,8 @@ export function KabsuboHome({ initialQuery = "" }: { initialQuery?: string }) {
   const [activeDetailPlaceId, setActiveDetailPlaceId] = useState<string | null>(
     null,
   );
+  const [isChatbotOpen, setIsChatbotOpen] = useState(false);
+  const [chatInput, setChatInput] = useState("");
 
   useEffect(() => {
     function refreshUser() {
@@ -145,6 +147,7 @@ export function KabsuboHome({ initialQuery = "" }: { initialQuery?: string }) {
 
     setSubmittedQuery(nextQuery);
     setActiveDetailPlaceId(null);
+    setIsChatbotOpen(false);
 
     const nextTopResult = rankPlaces(nextQuery).find(
       (place) => place.status === "approved" && place.matchScore > 0,
@@ -161,6 +164,7 @@ export function KabsuboHome({ initialQuery = "" }: { initialQuery?: string }) {
     setRouteInfo(null);
     setRouteStatus("idle");
     setActiveDetailPlaceId(null);
+    setIsChatbotOpen(false);
     router.push("/");
   }
 
@@ -236,6 +240,7 @@ export function KabsuboHome({ initialQuery = "" }: { initialQuery?: string }) {
 
   function handleOpenPlaceDetail(placeId: string) {
     setActiveDetailPlaceId(placeId);
+    setIsChatbotOpen(false);
     void handleGetDirections(placeId);
   }
 
@@ -267,10 +272,26 @@ export function KabsuboHome({ initialQuery = "" }: { initialQuery?: string }) {
     }
   }
 
-  function handleOpenChatbot(placeId: string) {
-    setCompareIds((currentIds) =>
-      currentIds.includes(placeId) ? currentIds : [...currentIds, placeId],
-    );
+  function handleOpenChatbot(placeId?: string) {
+    if (placeId) {
+      setCompareIds((currentIds) =>
+        currentIds.includes(placeId) ? currentIds : [...currentIds, placeId],
+      );
+    }
+
+    if (!hasSubmitted) {
+      const nextQuery = query.trim() || "food";
+      setSubmittedQuery(nextQuery);
+      router.push(`/results?q=${encodeURIComponent(nextQuery)}`);
+    }
+
+    setActiveDetailPlaceId(null);
+    setIsChatbotOpen(true);
+  }
+
+  function handleSendChatbotMessage(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setChatInput("");
   }
 
   return (
@@ -300,7 +321,10 @@ export function KabsuboHome({ initialQuery = "" }: { initialQuery?: string }) {
         />
       )}
 
-      <HomeFloatingActions isResultsView={hasSubmitted} />
+      <HomeFloatingActions
+        isResultsView={hasSubmitted}
+        onOpenChatbot={() => handleOpenChatbot()}
+      />
 
       {hasSubmitted && (
         <RecommendationsPanel
@@ -312,9 +336,13 @@ export function KabsuboHome({ initialQuery = "" }: { initialQuery?: string }) {
           compareIds={compareIds}
           favoriteIds={favoriteIds}
           activeDetailPlaceId={activeDetailPlaceId}
+          isChatbotOpen={isChatbotOpen}
+          chatInput={chatInput}
           onOpenPlaceDetail={handleOpenPlaceDetail}
           onToggleFavorite={handleToggleFavorite}
           onOpenChatbot={handleOpenChatbot}
+          onChatInputChange={setChatInput}
+          onSendChatbotMessage={handleSendChatbotMessage}
           onBackToResults={() => setActiveDetailPlaceId(null)}
           onGetDirections={handleGetDirections}
         />
@@ -400,7 +428,13 @@ function LandingSearchCard({
   );
 }
 
-function HomeFloatingActions({ isResultsView }: { isResultsView: boolean }) {
+function HomeFloatingActions({
+  isResultsView,
+  onOpenChatbot,
+}: {
+  isResultsView: boolean;
+  onOpenChatbot: () => void;
+}) {
   return (
     <div
       className={`absolute bottom-6 z-40 flex flex-col items-center gap-4 sm:bottom-8 ${
@@ -411,6 +445,7 @@ function HomeFloatingActions({ isResultsView }: { isResultsView: boolean }) {
     >
       <button
         type="button"
+        onClick={onOpenChatbot}
         className="grid size-14 place-items-center rounded-full border border-[#004b35] bg-[#fffaf0] text-[#004b35] shadow-2xl transition hover:-translate-y-0.5 hover:bg-[#fff6dd]"
         aria-label="Open chatbot"
       >
@@ -463,9 +498,13 @@ function RecommendationsPanel({
   compareIds,
   favoriteIds,
   activeDetailPlaceId,
+  isChatbotOpen,
+  chatInput,
   onOpenPlaceDetail,
   onToggleFavorite,
   onOpenChatbot,
+  onChatInputChange,
+  onSendChatbotMessage,
   onBackToResults,
   onGetDirections,
 }: {
@@ -477,18 +516,27 @@ function RecommendationsPanel({
   compareIds: string[];
   favoriteIds: string[];
   activeDetailPlaceId: string | null;
+  isChatbotOpen: boolean;
+  chatInput: string;
   onOpenPlaceDetail: (placeId: string) => void;
   onToggleFavorite: (placeId: string) => void;
-  onOpenChatbot: (placeId: string) => void;
+  onOpenChatbot: (placeId?: string) => void;
+  onChatInputChange: (message: string) => void;
+  onSendChatbotMessage: (event: FormEvent<HTMLFormElement>) => void;
   onBackToResults: () => void;
   onGetDirections: (placeId: string) => void;
 }) {
   const activeDetailPlace =
     results.find((place) => place.id === activeDetailPlaceId) ?? null;
-
   return (
     <aside className="absolute inset-x-0 bottom-0 z-30 max-h-[54vh] overflow-y-auto rounded-t-[24px] bg-[#fffaf0] px-5 pb-5 pt-4 shadow-[0_-14px_34px_rgba(0,75,53,0.22)] lg:inset-y-0 lg:left-auto lg:right-0 lg:max-h-none lg:w-[480px] lg:rounded-l-[26px] lg:rounded-tr-none lg:px-9 lg:pb-7 lg:pt-36 lg:shadow-[-12px_0_24px_rgba(0,0,0,0.2)]">
-      {activeDetailPlace ? (
+      {isChatbotOpen ? (
+        <ChatbotPanel
+          chatInput={chatInput}
+          onChatInputChange={onChatInputChange}
+          onSendChatbotMessage={onSendChatbotMessage}
+        />
+      ) : activeDetailPlace ? (
         <PlaceDetailPanel
           place={activeDetailPlace}
           directionsPlaceId={directionsPlaceId}
@@ -497,6 +545,7 @@ function RecommendationsPanel({
           isFavorite={favoriteIds.includes(activeDetailPlace.id)}
           onBackToResults={onBackToResults}
           onToggleFavorite={onToggleFavorite}
+          onOpenChatbot={onOpenChatbot}
           onGetDirections={onGetDirections}
         />
       ) : (
@@ -666,6 +715,7 @@ function PlaceDetailPanel({
   isFavorite,
   onBackToResults,
   onToggleFavorite,
+  onOpenChatbot,
   onGetDirections,
 }: {
   place: RankedPlace & { distanceKm: number; openNow: boolean };
@@ -675,6 +725,7 @@ function PlaceDetailPanel({
   isFavorite: boolean;
   onBackToResults: () => void;
   onToggleFavorite: (placeId: string) => void;
+  onOpenChatbot: (placeId?: string) => void;
   onGetDirections: (placeId: string) => void;
 }) {
   const menuByCategory = groupMenuByCategory(place.menuItems);
@@ -890,6 +941,7 @@ function PlaceDetailPanel({
           </button>
           <button
             type="button"
+            onClick={() => onOpenChatbot(place.id)}
             className="grid size-12 place-items-center rounded-full border border-[#004b35] text-[#004b35]"
             aria-label="Open chatbot"
           >
@@ -916,6 +968,122 @@ function PlaceDetailPanel({
         )}
       </div>
     </div>
+  );
+}
+
+function ChatbotPanel({
+  chatInput,
+  onChatInputChange,
+  onSendChatbotMessage,
+}: {
+  chatInput: string;
+  onChatInputChange: (message: string) => void;
+  onSendChatbotMessage: (event: FormEvent<HTMLFormElement>) => void;
+}) {
+  return (
+    <div className="-mx-5 -mb-5 -mt-4 flex min-h-[54vh] flex-col text-[#073d33] lg:-mx-9 lg:-mb-7 lg:-mt-36 lg:min-h-screen">
+      <div className="flex flex-1 flex-col px-7 pb-5 pt-20 lg:px-12 lg:pb-7 lg:pt-32">
+        <div className="mx-auto mt-4 flex max-w-xs flex-col items-center text-center">
+          <Bot size={92} strokeWidth={2.4} aria-hidden="true" />
+          <h2 className="mt-3 text-3xl font-semibold leading-none">
+            Can&apos;t decide?
+          </h2>
+          <p className="mt-4 flex items-center justify-center gap-2 text-2xl font-semibold">
+            i-
+            <Image
+              src="/brand/kabsubo-logo.png"
+              alt="kabSUBO"
+              width={70}
+              height={44}
+              className="h-8 w-auto object-contain"
+            />
+            na yan
+          </p>
+        </div>
+
+        <div className="mt-auto min-h-44 pt-10" aria-label="Chat messages" />
+
+        <form
+          onSubmit={onSendChatbotMessage}
+          className="mt-3 flex items-center gap-2"
+        >
+          <button
+            type="button"
+            className="grid size-8 shrink-0 place-items-center rounded-md text-[#073d33]"
+            aria-label="Open camera"
+          >
+            <CameraIcon />
+          </button>
+          <button
+            type="button"
+            className="grid size-8 shrink-0 place-items-center rounded-md text-[#073d33]"
+            aria-label="Attach image"
+          >
+            <ImageIcon />
+          </button>
+          <input
+            value={chatInput}
+            onChange={(event) => onChatInputChange(event.target.value)}
+            className="h-10 min-w-0 flex-1 rounded-md border border-[#004b35] bg-transparent px-3 text-sm font-semibold outline-none placeholder:text-[#416763]"
+            placeholder="Ask Kabsubo..."
+          />
+          <button
+            type="submit"
+            className="grid size-10 shrink-0 place-items-center rounded-md bg-[#416763] text-[#fffaf0]"
+            aria-label="Send message"
+          >
+            <Send size={18} aria-hidden="true" />
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function CameraIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      className="size-7"
+      fill="none"
+      viewBox="0 0 28 28"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M9 8.5 10.8 5h6.4L19 8.5h4.5v14h-19v-14H9Z"
+        stroke="currentColor"
+        strokeLinejoin="round"
+        strokeWidth="2"
+      />
+      <circle cx="14" cy="15.5" r="4" stroke="currentColor" strokeWidth="2" />
+    </svg>
+  );
+}
+
+function ImageIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      className="size-7"
+      fill="none"
+      viewBox="0 0 28 28"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M4.5 6.5h19v15h-19v-15Z"
+        stroke="currentColor"
+        strokeLinejoin="round"
+        strokeWidth="2"
+      />
+      <path
+        d="m7.5 19 5.2-5 3.5 3.2 2.3-2.3 3 4.1"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="2"
+      />
+      <circle cx="18.5" cy="10.5" r="1.4" fill="currentColor" />
+    </svg>
   );
 }
 
