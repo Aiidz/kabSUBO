@@ -8,20 +8,22 @@ USE kabsubo;
 -- ============================================================
 -- Profiles (submitters)
 -- ============================================================
-INSERT IGNORE INTO profiles (id, display_name, email) VALUES
-    ('user-bongalos', 'Bongalos', 'bongalos@kabsubo.test'),
-    ('user-gaano',    'Gaano',    'gaano@kabsubo.test'),
-    ('user-legaspi',  'Legaspi',  'legaspi@kabsubo.test'),
-    ('user-santos',   'Santos',   'santos@kabsubo.test');
+INSERT IGNORE INTO profiles (id, display_name, email, password_hash) VALUES
+    ('user-bongalos', 'Bongalos', 'bongalos@kabsubo.test', '$2y$12$vaLslKUsElwDh.Sx9dpsku4kofEhbPcpNjrKzGr0g26WMAuEbbfFy'),
+    ('user-gaano',    'Gaano',    'gaano@kabsubo.test',    '$2y$12$vaLslKUsElwDh.Sx9dpsku4kofEhbPcpNjrKzGr0g26WMAuEbbfFy'),
+    ('user-legaspi',  'Legaspi',  'legaspi@kabsubo.test',  '$2y$12$vaLslKUsElwDh.Sx9dpsku4kofEhbPcpNjrKzGr0g26WMAuEbbfFy'),
+    ('user-santos',   'Santos',   'santos@kabsubo.test',   '$2y$12$vaLslKUsElwDh.Sx9dpsku4kofEhbPcpNjrKzGr0g26WMAuEbbfFy'),
+    ('user-admin',    'Admin',    'admin@kabsubo.test',    '$2y$12$vaLslKUsElwDh.Sx9dpsku4kofEhbPcpNjrKzGr0g26WMAuEbbfFy');
 
 -- ============================================================
--- User roles (all 'user' by default)
+-- User roles (all 'user' by default, 'admin' for the admin)
 -- ============================================================
-INSERT IGNORE INTO user_roles (user_id, role) VALUES
-    ('user-bongalos', 'user'),
-    ('user-gaano',    'user'),
-    ('user-legaspi',  'user'),
-    ('user-santos',   'user');
+INSERT IGNORE INTO user_roles (id, user_id, role) VALUES
+    (UUID(), 'user-bongalos', 'user'),
+    (UUID(), 'user-gaano',    'user'),
+    (UUID(), 'user-legaspi',  'user'),
+    (UUID(), 'user-santos',   'user'),
+    (UUID(), 'user-admin',    'admin');
 
 -- ============================================================
 -- Places

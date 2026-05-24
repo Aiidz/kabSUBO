@@ -47,27 +47,15 @@ This folder is the PHP/MySQL backend expected by the Next.js frontend.
 
 ## Demo Accounts
 
-All seed users share the following structure:
+All accounts use `password` as the login password.
 
-| Display Name | Email | Password |
-|-------------|-------|----------|
-| Bongalos | `bongalos@kabsubo.test` | — |
-| Gaano | `gaano@kabsubo.test` | — |
-| Legaspi | `legaspi@kabsubo.test` | — |
-| Santos | `santos@kabsubo.test` | — |
-
-Seed users do not have a `password_hash` set by default. To log in as a seed user, either:
-
-- Register a new account via the `/sign-in` page, or
-- Set a password in SQL:
-
-  ```sql
-  UPDATE profiles
-  SET password_hash = '$2y$10$...'
-  WHERE email = 'bongalos@kabsubo.test';
-  ```
-
-  (Generate the hash with `php -r "echo password_hash('yourpassword', PASSWORD_BCRYPT);"`)
+| Display Name | Email | Role |
+|-------------|-------|------|
+| Bongalos | `bongalos@kabsubo.test` | user |
+| Gaano | `gaano@kabsubo.test` | user |
+| Legaspi | `legaspi@kabsubo.test` | user |
+| Santos | `santos@kabsubo.test` | user |
+| Admin | `admin@kabsubo.test` | admin |
 
 ## Making Someone Admin
 

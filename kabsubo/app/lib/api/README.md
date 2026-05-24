@@ -23,12 +23,13 @@ mysql -u root -p < database/seed.sql
 mysql -u root -p < database/advanced.sql
 ```
 
-Seed accounts (no password set by default — register via the app or set manually):
+All seed accounts use `password` as the login password:
 
-- `bongalos@kabsubo.test`
-- `gaano@kabsubo.test`
-- `legaspi@kabsubo.test`
-- `santos@kabsubo.test`
+- `bongalos@kabsubo.test` (user)
+- `gaano@kabsubo.test` (user)
+- `legaspi@kabsubo.test` (user)
+- `santos@kabsubo.test` (user)
+- `admin@kabsubo.test` (admin)
 
 ## Frontend Routes
 

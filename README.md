@@ -100,14 +100,15 @@ Set `NEXT_PUBLIC_KABSUBO_USE_MOCK_API=true` to run without the PHP backend. The 
 
 ## Demo Accounts (Seed Data)
 
-| Email | Password | Role |
-|-------|----------|------|
-| `bongalos@kabsubo.test` | — | user |
-| `gaano@kabsubo.test` | — | user |
-| `legaspi@kabsubo.test` | — | user |
-| `santos@kabsubo.test` | — | user |
+All accounts use `password` as the login password.
 
-Seed users do not have a password set. To create an account, register through the `/sign-in` page or set a `password_hash` via `password_hash('yourpassword', PASSWORD_BCRYPT)` in SQL.
+| Email | Role |
+|-------|------|
+| `bongalos@kabsubo.test` | user |
+| `gaano@kabsubo.test` | user |
+| `legaspi@kabsubo.test` | user |
+| `santos@kabsubo.test` | user |
+| `admin@kabsubo.test` | admin |
 
 ---
 
