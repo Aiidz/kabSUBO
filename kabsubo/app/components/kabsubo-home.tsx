@@ -114,6 +114,13 @@ export function KabsuboHome({ initialQuery = "" }: { initialQuery?: string }) {
     }
   }, [currentUser]);
 
+  useEffect(() => {
+    if (!submittedQuery.trim()) return;
+    recommendationsApi.search(submittedQuery).then((result) => {
+      setSearchResults(result.data.filter((place) => place.matchScore > 0));
+    });
+  }, [submittedQuery]);
+
   const usableUserLocation = locationState === "found" ? userLocation : null;
   const origin = usableUserLocation ?? campusCenter;
   const originLabel =
