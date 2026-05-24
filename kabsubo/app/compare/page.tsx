@@ -75,7 +75,7 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
   );
 
   return (
-    <main className="min-h-screen bg-[#f6f3ec] text-[#171714]">
+    <main className="min-h-screen bg-[#f6f3ec] pt-24 text-[#171714]">
       <header className="border-b border-black/10 bg-white/78 px-5 py-5 shadow-sm">
         <div className="mx-auto flex max-w-6xl flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>

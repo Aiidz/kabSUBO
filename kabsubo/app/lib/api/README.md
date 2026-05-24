@@ -2,15 +2,49 @@
 
 The frontend is prepared for a PHP + MySQL backend. By default it uses mock data from `app/data/places.ts`.
 
-Set these environment variables when the PHP backend exists:
+The PHP backend exists in the repository under `/backend`. Copy that folder to
+XAMPP as `C:\xampp\htdocs\kabsubo\api`, then set these environment variables:
 
 ```bash
 NEXT_PUBLIC_KABSUBO_API_BASE_URL=http://localhost/kabsubo/api
 NEXT_PUBLIC_KABSUBO_USE_MOCK_API=false
 ```
 
+Use `kabsubo/env.local.example` as the local frontend template.
+
+## Local Database
+
+Import these scripts in order:
+
+```sql
+SOURCE C:/Users/Ash/Desktop/kabSUBO/database/schema.sql;
+SOURCE C:/Users/Ash/Desktop/kabSUBO/database/seed.sql;
+SOURCE C:/Users/Ash/Desktop/kabSUBO/database/advanced.sql;
+```
+
+Seed login accounts:
+
+- `admin@cvsu.edu.ph` / `password`
+- `student@cvsu.edu.ph` / `password`
+
+## Frontend Routes
+
+- `/` - map and craving prompt
+- `/results?q=...` - map and ranked recommendations panel
+- `/place/{placeId}` - restaurant detail
+- `/compare?ids=...` - side-by-side dish or restaurant comparison
+- `/submit` - add a new place, auth required
+- `/my/submissions` - user's submissions and statuses
+- `/favorites` - saved places, auth required
+- `/auth` - sign in and sign up
+- `/admin` - moderation queue and place editor, admin only
+- `/about` - project overview and credits
+
 ## Endpoint Files
 
+- `POST /auth.php?action=signin` - sign in with email and password
+- `POST /auth.php?action=signup` - create a standard user account with an allowed CvSU email domain
+- `POST /auth.php?action=signout` - end the current session
 - `GET /places.php` - list places
 - `GET /places.php?id={placeId}` - get one place
 - `POST /places.php` - create submitted place
@@ -32,6 +66,34 @@ NEXT_PUBLIC_KABSUBO_USE_MOCK_API=false
 - `PUT /submissions.php?id={submissionId}` - approve/reject submission
 - `DELETE /submissions.php?id={submissionId}` - delete submission record
 - `GET /recommendations.php?q={query}` - ranked recommendation results
+
+## Account Rules
+
+- Browsing, searching, viewing details, and comparing must work without a session.
+- A signed-in `user` can submit places, leave reviews, save favorites, and edit their own submissions.
+- A signed-in `admin` can moderate submissions and edit or remove any entry.
+- PHP stores the signed-in user in a server-side session.
+- Protected endpoints should return `401` when not signed in and `403` when the role or owner does not match.
+- To make someone an admin, update `users.role` in MySQL.
+
+```sql
+UPDATE users
+SET role = 'admin'
+WHERE email = 'someone@cvsu.edu.ph';
+```
+
+Auth responses should return the public user only:
+
+```json
+{
+  "data": {
+    "id": "user-123",
+    "name": "Demo Student",
+    "email": "student@kabsubo.test",
+    "role": "user"
+  }
+}
+```
 
 ## Response Shape
 

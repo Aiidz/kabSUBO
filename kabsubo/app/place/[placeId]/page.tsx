@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PlaceInsetMap } from "@/app/components/place-inset-map";
+import { PlaceActions } from "@/app/components/place-actions";
 import {
   campusCenter,
   foodPlaces,
@@ -78,7 +79,7 @@ export default async function PlaceDetailPage({ params }: PlacePageProps) {
   const distanceKm = getDistanceKm(campusCenter, place.coordinates);
 
   return (
-    <main className="min-h-screen bg-[#f6f3ec] text-[#171714]">
+    <main className="min-h-screen bg-[#f6f3ec] pt-24 text-[#171714]">
       <section className="relative min-h-[420px] overflow-hidden bg-[#171714] text-white">
         {place.bestSeller.imageUrl ? (
           <Image
@@ -196,6 +197,8 @@ export default async function PlaceDetailPage({ params }: PlacePageProps) {
               />
             </div>
           </section>
+
+          <PlaceActions placeId={place.id} />
         </aside>
       </section>
     </main>
