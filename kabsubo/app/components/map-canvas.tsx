@@ -87,7 +87,8 @@ export function MapCanvas({
       return;
     }
 
-    mapRef.current = new maplibregl.Map({
+    let isDisposed = false;
+    const map = new maplibregl.Map({
       container: mapContainer,
       style: osmStyle,
       center: campusCenter,
@@ -100,14 +101,15 @@ export function MapCanvas({
       attributionControl: { compact: true },
     });
 
-    setMapReady(true);
-
-    mapRef.current.addControl(
-      new maplibregl.NavigationControl({ visualizePitch: true }),
-      "bottom-right",
-    );
+    mapRef.current = map;
+    map.once("load", () => {
+      if (!isDisposed) {
+        setMapReady(true);
+      }
+    });
 
     return () => {
+      isDisposed = true;
       markersRef.current.forEach(cleanupMarkerInstance);
       markersRef.current = [];
       userMarkerRef.current?.remove();
@@ -351,8 +353,12 @@ function MapcnMarkerPopup({ place }: { place: FoodPlace }) {
   return (
     <article className="food-popup-card">
       <div className="food-popup-image">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={place.bestSeller.imageUrl} alt={place.bestSeller.name} />
+        {place.bestSeller.imageUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={place.bestSeller.imageUrl} alt={place.bestSeller.name} />
+        ) : (
+          <div className="h-full w-full bg-gradient-to-br from-[#2a1a0e] via-[#1f1a17] to-[#171714]" />
+        )}
         <span>{place.type}</span>
       </div>
       <div className="food-popup-body">

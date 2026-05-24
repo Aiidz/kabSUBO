@@ -14,16 +14,53 @@ if (!$query) {
     exit;
 }
 
-$places = $db->query(
-    "SELECT * FROM places WHERE status = 'approved' ORDER BY created_at DESC"
-)->fetchAll();
-
 $terms = get_query_terms($query);
+$searchString = '';
+foreach ($terms as $term) {
+    $sanitized = preg_replace('/[+\-><\(\)~*\"@]/', '', $term);
+    if ($sanitized !== '') {
+        $searchString .= $sanitized . '* ';
+    }
+}
+$searchString = trim($searchString);
+
+if ($searchString !== '') {
+    $likeTerms = [];
+    $likeWheres = [];
+    foreach ($terms as $term) {
+        $likeWheres[] = "p.name LIKE ? OR p.description LIKE ? OR m.name LIKE ?";
+        $like = '%' . $term . '%';
+        $likeTerms[] = $like;
+        $likeTerms[] = $like;
+        $likeTerms[] = $like;
+    }
+    $likeSql = implode(' OR ', $likeWheres);
+
+    $stmt = $db->prepare(
+        "SELECT DISTINCT p.* FROM places p
+         LEFT JOIN menu_items m ON m.place_id = p.id
+         WHERE p.status = 'approved'
+           AND (
+             MATCH(p.name, p.description) AGAINST(? IN BOOLEAN MODE)
+             OR MATCH(m.name) AGAINST(? IN BOOLEAN MODE)
+             " . ($likeSql ? "OR ($likeSql)" : "") . "
+           )
+         ORDER BY p.created_at DESC"
+    );
+    $params = array_merge([$searchString, $searchString], $likeTerms);
+    $stmt->execute($params);
+    $places = $stmt->fetchAll();
+} else {
+    $places = [];
+}
+
+$placeIds = array_column($places, 'id');
+$batchData = prefetch_place_data($db, $placeIds);
 $results = [];
 
 foreach ($places as $place) {
-    $menuItems = get_menu_items($place['id']);
-    $placeData = format_place($place);
+    $menuItems = $batchData['menu_items'][$place['id']] ?? [];
+    $placeData = format_place($place, $batchData);
     $match = get_place_match($placeData, $menuItems, $terms);
 
     if ($match['matchScore'] > 0) {

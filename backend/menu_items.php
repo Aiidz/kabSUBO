@@ -35,6 +35,7 @@ function list_menu_items(PDO $db, ?string $placeId): void
 
 function create_menu_item(PDO $db): void
 {
+    require_auth($db);
     $body = get_json_body();
     $placeId = $body['place_id'] ?? null;
 
@@ -70,6 +71,7 @@ function create_menu_item(PDO $db): void
 
 function update_menu_item(PDO $db, ?string $placeId, ?string $name): void
 {
+    require_auth($db);
     if (!$placeId || !$name) {
         error_response('place_id and name are required', 400);
     }
@@ -124,6 +126,7 @@ function update_menu_item(PDO $db, ?string $placeId, ?string $name): void
 
 function delete_menu_item(PDO $db, ?string $placeId, ?string $name): void
 {
+    require_auth($db);
     if (!$placeId || !$name) {
         error_response('place_id and name are required', 400);
     }

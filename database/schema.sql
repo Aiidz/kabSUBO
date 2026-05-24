@@ -4,24 +4,37 @@
 -- Based on ADBMS project ERD + frontend data model
 -- ============================================================
 
-CREATE DATABASE IF NOT EXISTS kabsupo
+CREATE DATABASE IF NOT EXISTS kabsubo
   CHARACTER SET utf8mb4
   COLLATE utf8mb4_unicode_ci;
 
-USE kabsupo;
+USE kabsubo;
 
 -- ============================================================
 -- 1. profiles — user profile linked to authentication
 -- ============================================================
 CREATE TABLE IF NOT EXISTS profiles (
-    id           CHAR(36)     PRIMARY KEY DEFAULT (UUID()),
-    display_name VARCHAR(255) NOT NULL,
-    avatar_url   TEXT,
-    created_at   TIMESTAMP    DEFAULT CURRENT_TIMESTAMP
+    id            CHAR(36)     PRIMARY KEY DEFAULT (UUID()),
+    display_name  VARCHAR(255) NOT NULL UNIQUE,
+    email         VARCHAR(255) NOT NULL UNIQUE,
+    avatar_url    TEXT,
+    password_hash VARCHAR(255),
+    created_at    TIMESTAMP    DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
 -- ============================================================
--- 2. user_roles — role assignment (admin / moderator / user)
+-- 2. sessions — auth tokens for login persistence
+-- ============================================================
+CREATE TABLE IF NOT EXISTS sessions (
+    id         CHAR(36)     PRIMARY KEY DEFAULT (UUID()),
+    user_id    CHAR(36)     NOT NULL,
+    token      VARCHAR(64)  NOT NULL UNIQUE,
+    created_at TIMESTAMP    DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES profiles(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+-- ============================================================
+-- 3. user_roles — role assignment (admin / moderator / user)
 -- ============================================================
 CREATE TABLE IF NOT EXISTS user_roles (
     id      CHAR(36) PRIMARY KEY DEFAULT (UUID()),

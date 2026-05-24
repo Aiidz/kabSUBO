@@ -3,8 +3,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PlaceInsetMap } from "@/app/components/place-inset-map";
+import { PlaceActions } from "@/app/components/place-actions";
 import {
   campusCenter,
+  foodPlaces,
   type FoodPlace,
 } from "@/app/data/places";
 import { placesApi } from "@/app/lib/api/kabsubo-api";
@@ -16,16 +18,31 @@ type PlacePageProps = {
 };
 
 export async function generateStaticParams() {
-  const places = await placesApi.listApproved();
-
-  return places.data.map((place) => ({
-    placeId: place.id,
-  }));
+  try {
+    const places = await placesApi.listApproved();
+    return places.data.map((place) => ({
+      placeId: place.id,
+    }));
+  } catch (error) {
+    console.warn("PHP API server is offline during generateStaticParams. Falling back to static seed data.", error);
+    return foodPlaces.map((place) => ({
+      placeId: place.id,
+    }));
+  }
 }
 
 export async function generateMetadata({ params }: PlacePageProps) {
   const { placeId } = await params;
-  const place = await placesApi.get(placeId).catch(() => null);
+  let place: { data: FoodPlace } | null = null;
+  try {
+    place = await placesApi.get(placeId);
+  } catch (error) {
+    console.warn(`PHP API server offline for metadata of place ${placeId}. Trying local seed fallback.`, error);
+    const staticPlace = foodPlaces.find((p) => p.id === placeId);
+    if (staticPlace) {
+      place = { data: staticPlace };
+    }
+  }
 
   if (!place) {
     return {
@@ -41,7 +58,17 @@ export async function generateMetadata({ params }: PlacePageProps) {
 
 export default async function PlaceDetailPage({ params }: PlacePageProps) {
   const { placeId } = await params;
-  const result = await placesApi.get(placeId).catch(() => null);
+  let result: { data: FoodPlace } | null = null;
+
+  try {
+    result = await placesApi.get(placeId);
+  } catch (error) {
+    console.warn(`PHP API server offline for place detail ${placeId}. Trying local seed fallback.`, error);
+    const staticPlace = foodPlaces.find((p) => p.id === placeId);
+    if (staticPlace) {
+      result = { data: staticPlace };
+    }
+  }
 
   if (!result) {
     notFound();
@@ -52,15 +79,19 @@ export default async function PlaceDetailPage({ params }: PlacePageProps) {
   const distanceKm = getDistanceKm(campusCenter, place.coordinates);
 
   return (
-    <main className="min-h-screen bg-[#f6f3ec] text-[#171714]">
+    <main className="min-h-screen bg-[#f6f3ec] pt-24 text-[#171714]">
       <section className="relative min-h-[420px] overflow-hidden bg-[#171714] text-white">
-        <Image
-          src={place.bestSeller.imageUrl}
-          alt={place.bestSeller.name}
-          fill
-          priority
-          className="object-cover opacity-55"
-        />
+        {place.bestSeller.imageUrl ? (
+          <Image
+            src={place.bestSeller.imageUrl}
+            alt={place.bestSeller.name}
+            fill
+            priority
+            className="object-cover opacity-55"
+          />
+        ) : (
+          <div className="absolute inset-0 bg-gradient-to-br from-[#2a1a0e] via-[#1f1a17] to-[#171714]" />
+        )}
         <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/35 to-black/10" />
         <div className="relative z-10 mx-auto flex min-h-[420px] max-w-6xl flex-col justify-end px-5 py-8">
           <Link
@@ -127,8 +158,8 @@ export default async function PlaceDetailPage({ params }: PlacePageProps) {
           <section className="rounded-lg border border-black/10 bg-white/82 p-5 shadow-sm">
             <h2 className="text-2xl font-black">Recent Reviews</h2>
             <div className="mt-4 grid gap-3">
-              {place.recentReviews.map((review) => (
-                <article key={`${review.author}-${review.date}`} className="rounded-lg bg-[#fffaf0] p-4">
+              {place.recentReviews.map((review, i) => (
+                <article key={`${review.author}-${review.rating}-${i}`} className="rounded-lg bg-[#fffaf0] p-4">
                   <div className="flex items-center justify-between gap-3">
                     <p className="font-black">{review.author}</p>
                     <span className="inline-flex items-center gap-1 text-sm font-black text-[#7b3320]">
@@ -166,6 +197,8 @@ export default async function PlaceDetailPage({ params }: PlacePageProps) {
               />
             </div>
           </section>
+
+          <PlaceActions placeId={place.id} />
         </aside>
       </section>
     </main>
