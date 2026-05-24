@@ -1,6 +1,6 @@
 # kabSUBO — CvSU Food Discovery Platform
 
-> A web platform that helps Cavite State University (Don Severino Delas Alas Main Campus, Indang) students discover nearby food spots by typing what they're craving. The map of restaurants, shops, stalls, and diners is the canvas; an AI-assisted prompt sits on top.
+> A web platform that helps Cavite State University (Don Severino Delas Alas Main Campus, Indang) students discover nearby food spots by typing what they're craving.
 
 ---
 
@@ -28,33 +28,86 @@ Open Map -> Type Craving -> Browse Ranked Results -> Compare / Get Directions
 ### Prerequisites
 
 - **Node.js 20+**
-- **pnpm 8+** (or npm/yarn)
+- **PHP 8.1+** with PDO MySQL extension
+- **MySQL 8.x / MariaDB 12.x**
+- **npm**
 
 ### Installation
 
 ```bash
 git clone https://github.com/Aiidz/kabSUBO.git
 cd kabSUBO
-pnpm install
+```
+
+#### 1. Database
+
+Create the database and import the schema + seed data:
+
+```bash
+mysql -u root -p < database/schema.sql
+mysql -u root -p < database/seed.sql
+mysql -u root -p < database/advanced.sql
+```
+
+#### 2. Backend
+
+Copy the `backend/` folder to your web server's document root (e.g., XAMPP `htdocs` or `/var/www/html`). Configure DB credentials in `backend/db_config.php` or via environment variables:
+
+```env
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_NAME=kabsubo
+DB_USER=kabsubo
+DB_PASS=kabsubo_dev
+```
+
+#### 3. Frontend
+
+```bash
+cd kabsubo
+cp env.local.example .env.local
+npm install
+```
+
+Edit `.env.local` and point the API URL to your PHP backend:
+
+```env
+NEXT_PUBLIC_KABSUBO_API_BASE_URL=http://localhost/kabsubo/api
+NEXT_PUBLIC_KABSUBO_USE_MOCK_API=false
 ```
 
 ### Development
 
 ```bash
-pnpm dev
+cd kabsubo
+npm run dev
 ```
+
+Open [http://localhost:3000](http://localhost:3000).
 
 ### Build
 
 ```bash
-pnpm build
+cd kabsubo
+npm run build
 ```
 
-### Preview
+### Mock API Mode
 
-```bash
-pnpm preview
-```
+Set `NEXT_PUBLIC_KABSUBO_USE_MOCK_API=true` to run without the PHP backend. The app uses hardcoded sample data for all features.
+
+---
+
+## Demo Accounts (Seed Data)
+
+| Email | Password | Role |
+|-------|----------|------|
+| `bongalos@kabsubo.test` | — | user |
+| `gaano@kabsubo.test` | — | user |
+| `legaspi@kabsubo.test` | — | user |
+| `santos@kabsubo.test` | — | user |
+
+Seed users do not have a password set. To create an account, register through the `/sign-in` page or set a `password_hash` via `password_hash('yourpassword', PASSWORD_BCRYPT)` in SQL.
 
 ---
 
@@ -69,7 +122,7 @@ pnpm preview
 | `/submit` | Add a new place (auth required) |
 | `/my/submissions` | User's own submissions and statuses |
 | `/favorites` | Saved places (auth required) |
-| `/auth` | Sign in / sign up |
+| `/sign-in` | Sign in / sign up |
 | `/admin` | Moderation queue + place editor (admin only) |
 | `/about` | About kabSUBO and credits |
 
@@ -92,29 +145,32 @@ pnpm preview
 
 ## Tech Stack
 
-- **Framework** — TanStack Start (TanStack Router)
-- **Database & Auth** — Lovable Cloud (Supabase)
-- **AI** — Gemini Flash via Lovable AI Gateway
+- **Framework** — Next.js + TypeScript
+- **Styling** — Tailwind CSS with glassmorphism
+- **Backend** — PHP 8.1+ with PDO prepared statements
+- **Database** — MySQL 8.x / MariaDB 12.x
+- **AI** — Gemini Flash for recommendation ranking
 - **Maps** — MapLibre GL JS + OpenStreetMap (no API key required)
-- **Styling** — CSS with glassmorphism design
-- **Validation** — Zod on both client and server
+- **Auth** — Session tokens via `sessions` table + httponly cookie
 
 ---
 
 ## Data Model
 
 ```
-profiles            id, display_name, avatar_url, created_at
+profiles            id, display_name, email (unique), avatar_url, password_hash, created_at
 user_roles          id, user_id, role ('admin'|'moderator'|'user')
+sessions            id, user_id, token (unique), created_at
+
 places              id, name, slug, type, description, lat, lng,
                     address, hours_json, price_range, photo_urls[],
                     submitted_by, status ('pending'|'approved'|'rejected'),
-                    created_at
+                    created_at, updated_at
 menu_items          id, place_id, name, description, price, category,
-                    is_best_seller, photo_url, tags[]
+                    is_best_seller, tags[], created_at
 reviews             id, place_id, user_id, rating (1-5), body, created_at
-favorites           user_id, place_id, created_at
-submissions_audit   id, place_id, action, actor_id, notes, created_at
+favorites           user_id, place_id, created_at (composite PK)
+submissions_audit   id, place_id, actor_id, action, notes, created_at
 ```
 
 ---
@@ -130,9 +186,30 @@ A server function `recommendPlaces({ query, userLat, userLng })`:
 
 ---
 
-## Contributing
+## Project Structure
 
-Contributions are welcome! Open an issue or submit a pull request.
+```
+kabSUBO/
+├── backend/          # PHP API endpoints
+│   ├── auth.php
+│   ├── places.php
+│   ├── menu_items.php
+│   ├── reviews.php
+│   ├── favorites.php
+│   ├── submissions.php
+│   ├── recommendations.php
+│   ├── helpers.php
+│   └── db_config.php
+├── database/         # SQL schema + seed data
+│   ├── schema.sql
+│   ├── seed.sql
+│   └── advanced.sql
+├── kabsubo/          # Next.js frontend
+│   ├── app/
+│   ├── public/
+│   └── package.json
+└── README.md
+```
 
 ---
 

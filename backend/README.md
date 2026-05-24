@@ -2,100 +2,98 @@
 
 This folder is the PHP/MySQL backend expected by the Next.js frontend.
 
-## Local XAMPP Setup
+## Local Setup
 
-1. Copy this folder to:
+### Apache + MySQL (XAMPP on Windows, LAMP on Linux)
 
-```text
-C:\xampp\htdocs\kabsubo\api
-```
+1. Copy this folder to your web server's document root:
 
-2. Start Apache and MySQL in XAMPP.
+   - **XAMPP**: `C:\xampp\htdocs\kabsubo\api`
+   - **LAMP**: `/var/www/html/kabsubo/api`
 
-3. Import the database scripts in phpMyAdmin or MySQL CLI:
+2. Start Apache and MySQL.
 
-```sql
-SOURCE C:/Users/Ash/Desktop/kabSUBO/database/schema.sql;
-SOURCE C:/Users/Ash/Desktop/kabSUBO/database/seed.sql;
-SOURCE C:/Users/Ash/Desktop/kabSUBO/database/advanced.sql;
-```
+3. Import the database scripts (run from repository root):
 
-4. Create `kabsubo/.env.local` from `kabsubo/env.local.example`:
+   ```bash
+   mysql -u root -p < database/schema.sql
+   mysql -u root -p < database/seed.sql
+   mysql -u root -p < database/advanced.sql
+   ```
 
-```env
-NEXT_PUBLIC_KABSUBO_API_BASE_URL=http://localhost/kabsubo/api
-NEXT_PUBLIC_KABSUBO_USE_MOCK_API=false
-```
+4. Configure DB credentials in `db_config.php` or via environment variables. Defaults:
 
-5. Restart the Next.js dev server:
+   ```env
+   DB_HOST=127.0.0.1
+   DB_PORT=3306
+   DB_NAME=kabsubo
+   DB_USER=kabsubo
+   DB_PASS=kabsubo_dev
+   ```
 
-```bash
-npm.cmd run dev
-```
+5. Create `kabsubo/.env.local` from `kabsubo/env.local.example`:
+
+   ```env
+   NEXT_PUBLIC_KABSUBO_API_BASE_URL=http://localhost/kabsubo/api
+   NEXT_PUBLIC_KABSUBO_USE_MOCK_API=false
+   ```
+
+6. Restart the Next.js dev server:
+
+   ```bash
+   cd kabsubo
+   npm run dev
+   ```
 
 ## Demo Accounts
 
-All seed users use this password:
+All seed users share the following structure:
 
-```text
-password
-```
+| Display Name | Email | Password |
+|-------------|-------|----------|
+| Bongalos | `bongalos@kabsubo.test` | — |
+| Gaano | `gaano@kabsubo.test` | — |
+| Legaspi | `legaspi@kabsubo.test` | — |
+| Santos | `santos@kabsubo.test` | — |
 
-Admin:
+Seed users do not have a `password_hash` set by default. To log in as a seed user, either:
 
-```text
-admin@cvsu.edu.ph
-```
+- Register a new account via the `/sign-in` page, or
+- Set a password in SQL:
 
-Student:
+  ```sql
+  UPDATE profiles
+  SET password_hash = '$2y$10$...'
+  WHERE email = 'bongalos@kabsubo.test';
+  ```
 
-```text
-student@cvsu.edu.ph
-```
-
-## Configuration
-
-The backend defaults are XAMPP-friendly:
-
-```text
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_NAME=kabsubo
-DB_USER=root
-DB_PASS=
-```
-
-Optional environment variables:
-
-```text
-KABSUBO_ALLOWED_ORIGINS=http://localhost:3000
-KABSUBO_ALLOWED_EMAIL_DOMAINS=cvsu.edu.ph
-```
-
-To allow another CvSU student subdomain:
-
-```text
-KABSUBO_ALLOWED_EMAIL_DOMAINS=cvsu.edu.ph,student.cvsu.edu.ph
-```
+  (Generate the hash with `php -r "echo password_hash('yourpassword', PASSWORD_BCRYPT);"`)
 
 ## Making Someone Admin
 
 Run this in MySQL:
 
 ```sql
-UPDATE users
-SET role = 'admin'
-WHERE email = 'someone@cvsu.edu.ph';
+INSERT INTO user_roles (id, user_id, role) VALUES (UUID(), '<user-id>', 'admin');
+```
+
+Find the user ID first:
+
+```sql
+SELECT id, display_name, email FROM profiles WHERE email = 'someone@cvsu.edu.ph';
 ```
 
 ## Endpoint Files
 
-- `auth.php`
-- `places.php`
-- `menu_items.php`
-- `reviews.php`
-- `favorites.php`
-- `submissions.php`
-- `recommendations.php`
+| File | Description |
+|------|-------------|
+| `auth.php` | Sign in, sign up, sign out, session check |
+| `places.php` | CRUD for food places |
+| `menu_items.php` | CRUD for menu items per place |
+| `reviews.php` | CRUD for reviews per place |
+| `favorites.php` | Toggle and list user favorites |
+| `submissions.php` | List, approve, reject submissions |
+| `recommendations.php` | AI-ranked search results |
+| `helpers.php` | CORS, JSON responses, auth helpers |
 
 All endpoints return JSON with a `data` property for frontend compatibility.
