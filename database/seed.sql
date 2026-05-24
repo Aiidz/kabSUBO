@@ -8,11 +8,11 @@ USE kabsubo;
 -- ============================================================
 -- Profiles (submitters)
 -- ============================================================
-INSERT IGNORE INTO profiles (id, display_name) VALUES
-    ('user-bongalos', 'Bongalos'),
-    ('user-gaano',    'Gaano'),
-    ('user-legaspi',  'Legaspi'),
-    ('user-santos',   'Santos');
+INSERT IGNORE INTO profiles (id, display_name, email) VALUES
+    ('user-bongalos', 'Bongalos', 'bongalos@kabsubo.test'),
+    ('user-gaano',    'Gaano',    'gaano@kabsubo.test'),
+    ('user-legaspi',  'Legaspi',  'legaspi@kabsubo.test'),
+    ('user-santos',   'Santos',   'santos@kabsubo.test');
 
 -- ============================================================
 -- User roles (all 'user' by default)

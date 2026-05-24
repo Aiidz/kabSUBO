@@ -194,29 +194,6 @@ function delete_review(PDO $db, ?string $placeId, ?string $author): void
     json_response(['ok' => true]);
 }
 
-function resolve_user(PDO $db, string $displayName): string
-{
-    $stmt = $db->prepare("SELECT id FROM profiles WHERE display_name = ?");
-    $stmt->execute([$displayName]);
-    $user = $stmt->fetch();
-
-    if ($user) {
-        return $user['id'];
-    }
-
-    $id = sprintf(
-        'user-%s',
-        strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $displayName))
-    );
-
-    $stmt = $db->prepare(
-        "INSERT IGNORE INTO profiles (id, display_name) VALUES (?, ?)"
-    );
-    $stmt->execute([$id, $displayName]);
-
-    return $id;
-}
-
 function format_review(array $row): array
 {
     return [

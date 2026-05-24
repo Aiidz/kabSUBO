@@ -15,7 +15,8 @@ USE kabsubo;
 -- ============================================================
 CREATE TABLE IF NOT EXISTS profiles (
     id            CHAR(36)     PRIMARY KEY DEFAULT (UUID()),
-    display_name  VARCHAR(255) NOT NULL,
+    display_name  VARCHAR(255) NOT NULL UNIQUE,
+    email         VARCHAR(255) NOT NULL UNIQUE,
     avatar_url    TEXT,
     password_hash VARCHAR(255),
     created_at    TIMESTAMP    DEFAULT CURRENT_TIMESTAMP

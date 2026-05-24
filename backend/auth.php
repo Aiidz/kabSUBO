@@ -11,10 +11,10 @@ $db     = get_db();
 
 match ($method) {
     'POST' => match ($action) {
-        'register' => register($db),
-        'login'    => login($db),
-        'logout'   => logout($db),
-        default    => error_response('Unknown action', 400),
+        'signup'  => signup($db),
+        'signin'  => signin($db),
+        'signout' => signout($db),
+        default   => error_response('Unknown action', 400),
     },
     'GET' => match ($action) {
         'me'   => me($db),
@@ -23,22 +23,37 @@ match ($method) {
     default => error_response('Method not allowed', 405),
 };
 
-function register(PDO $db): void
+function get_user_role(PDO $db, string $userId): string
 {
-    $body        = get_json_body();
-    $displayName = trim($body['displayName'] ?? '');
-    $password    = $body['password'] ?? '';
+    $stmt = $db->prepare("SELECT role FROM user_roles WHERE user_id = ?");
+    $stmt->execute([$userId]);
+    return $stmt->fetchColumn() ?: 'user';
+}
 
-    if ($displayName === '' || $password === '') {
-        error_response('displayName and password are required', 400);
+function signup(PDO $db): void
+{
+    $body     = get_json_body();
+    $name     = trim($body['name'] ?? '');
+    $email    = trim($body['email'] ?? '');
+    $password = $body['password'] ?? '';
+
+    if ($name === '' || $email === '' || $password === '') {
+        error_response('name, email, and password are required', 400);
     }
 
     if (strlen($password) < 6) {
         error_response('Password must be at least 6 characters', 422);
     }
 
+    $stmt = $db->prepare("SELECT id FROM profiles WHERE email = ?");
+    $stmt->execute([$email]);
+
+    if ($stmt->fetch()) {
+        error_response('Email is already registered', 409);
+    }
+
     $stmt = $db->prepare("SELECT id FROM profiles WHERE display_name = ?");
-    $stmt->execute([$displayName]);
+    $stmt->execute([$name]);
 
     if ($stmt->fetch()) {
         error_response('Display name already taken', 409);
@@ -47,37 +62,52 @@ function register(PDO $db): void
     $id   = generate_uuid_v4();
     $hash = password_hash($password, PASSWORD_BCRYPT);
 
-    $stmt = $db->prepare(
-        "INSERT INTO profiles (id, display_name, password_hash) VALUES (?, ?, ?)"
-    );
-    $stmt->execute([$id, $displayName, $hash]);
+    $db->beginTransaction();
+    try {
+        $stmt = $db->prepare(
+            "INSERT INTO profiles (id, display_name, email, password_hash) VALUES (?, ?, ?, ?)"
+        );
+        $stmt->execute([$id, $name, $email, $hash]);
+
+        $stmt = $db->prepare(
+            "INSERT INTO user_roles (id, user_id, role) VALUES (UUID(), ?, 'user')"
+        );
+        $stmt->execute([$id]);
+
+        $db->commit();
+    } catch (Exception $e) {
+        $db->rollBack();
+        error_response('Registration failed', 500);
+    }
 
     $token = create_session($db, $id);
     set_session_cookie($token);
 
     json_response([
         'token' => $token,
-        'user'  => [
-            'id'          => $id,
-            'displayName' => $displayName,
-        ],
+        'id'    => $id,
+        'name'  => $name,
+        'email' => $email,
+        'role'  => 'user',
     ]);
 }
 
-function login(PDO $db): void
+function signin(PDO $db): void
 {
-    $body        = get_json_body();
-    $displayName = trim($body['displayName'] ?? '');
-    $password    = $body['password'] ?? '';
+    $body     = get_json_body();
+    $email    = trim($body['email'] ?? '');
+    $password = $body['password'] ?? '';
 
-    if ($displayName === '' || $password === '') {
-        error_response('displayName and password are required', 400);
+    if ($email === '' || $password === '') {
+        error_response('email and password are required', 400);
     }
 
     $stmt = $db->prepare(
-        "SELECT id, display_name, password_hash FROM profiles WHERE display_name = ?"
+        "SELECT p.id, p.display_name, p.email, p.password_hash
+         FROM profiles p
+         WHERE p.email = ?"
     );
-    $stmt->execute([$displayName]);
+    $stmt->execute([$email]);
     $profile = $stmt->fetch();
 
     if (!$profile || !$profile['password_hash']) {
@@ -93,10 +123,10 @@ function login(PDO $db): void
 
     json_response([
         'token' => $token,
-        'user'  => [
-            'id'          => $profile['id'],
-            'displayName' => $profile['display_name'],
-        ],
+        'id'    => $profile['id'],
+        'name'  => $profile['display_name'],
+        'email' => $profile['email'],
+        'role'  => get_user_role($db, $profile['id']),
     ]);
 }
 
@@ -109,7 +139,7 @@ function me(PDO $db): void
     }
 
     $stmt = $db->prepare(
-        "SELECT p.id, p.display_name, p.avatar_url
+        "SELECT p.id, p.display_name, p.email, p.avatar_url
          FROM sessions s
          JOIN profiles p ON p.id = s.user_id
          WHERE s.token = ?"
@@ -122,13 +152,14 @@ function me(PDO $db): void
     }
 
     json_response([
-        'id'          => $user['id'],
-        'displayName' => $user['display_name'],
-        'avatarUrl'   => $user['avatar_url'] ?? '',
+        'id'    => $user['id'],
+        'name'  => $user['display_name'],
+        'email' => $user['email'],
+        'role'  => get_user_role($db, $user['id']),
     ]);
 }
 
-function logout(PDO $db): void
+function signout(PDO $db): void
 {
     $token = get_session_token();
 

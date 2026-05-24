@@ -24,12 +24,19 @@ function list_submissions(PDO $db, ?string $status): void
     require_role($db, $userId, ['admin', 'moderator']);
     if ($status) {
         $stmt = $db->prepare(
-            "SELECT * FROM submissions_audit WHERE action = ? ORDER BY created_at DESC"
+            "SELECT sa.*, p.display_name AS actor_name
+             FROM submissions_audit sa
+             LEFT JOIN profiles p ON p.id = sa.actor_id
+             WHERE sa.action = ?
+             ORDER BY sa.created_at DESC"
         );
         $stmt->execute([$status]);
     } else {
         $stmt = $db->query(
-            "SELECT * FROM submissions_audit ORDER BY created_at DESC"
+            "SELECT sa.*, p.display_name AS actor_name
+             FROM submissions_audit sa
+             LEFT JOIN profiles p ON p.id = sa.actor_id
+             ORDER BY sa.created_at DESC"
         );
     }
 
@@ -54,7 +61,9 @@ function create_submission(PDO $db): void
         $photoUrls = json_encode([$body['bestSeller']['imageUrl']]);
     }
 
-    $submittedBy = $userId;
+    $stmt = $db->prepare("SELECT display_name FROM profiles WHERE id = ?");
+    $stmt->execute([$userId]);
+    $submittedByName = $stmt->fetchColumn() ?: $userId;
 
     $stmt = $db->prepare(
         "CALL submit_place_with_audit(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
@@ -67,7 +76,7 @@ function create_submission(PDO $db): void
         $body['lat'] ?? $body['coordinates'][1] ?? null,
         $body['lng'] ?? $body['coordinates'][0] ?? null,
         $body['address'] ?? null,
-        $submittedBy,
+        $userId,
         $body['description'] ?? null,
         isset($body['hours']) ? json_encode($body['hours']) : null,
         $body['priceRange'] ?? null,
@@ -79,7 +88,7 @@ function create_submission(PDO $db): void
         'id'          => $auditId,
         'placeId'     => $placeId,
         'status'      => 'pending',
-        'submittedBy' => $submittedBy ?? '',
+        'submittedBy' => $submittedByName,
     ]);
 }
 
@@ -97,6 +106,9 @@ function update_submission(PDO $db, ?string $id): void
     $notes   = $body['notes'] ?? null;
     $fields  = [];
     $params  = [];
+
+    $fields[] = 'actor_id = ?';
+    $params[] = $userId;
 
     if ($action) {
         $fields[] = 'action = ?';
@@ -132,7 +144,12 @@ function update_submission(PDO $db, ?string $id): void
         }
     }
 
-    $stmt = $db->prepare("SELECT * FROM submissions_audit WHERE id = ?");
+    $stmt = $db->prepare(
+        "SELECT sa.*, p.display_name AS actor_name
+         FROM submissions_audit sa
+         LEFT JOIN profiles p ON p.id = sa.actor_id
+         WHERE sa.id = ?"
+    );
     $stmt->execute([$id]);
     $row = $stmt->fetch();
 
@@ -149,7 +166,7 @@ function update_submission(PDO $db, ?string $id): void
         'id'          => $row['id'],
         'placeId'     => $row['place_id'],
         'status'      => $placeStatus ?: $row['action'],
-        'submittedBy' => $row['actor_id'] ?? '',
+        'submittedBy' => $row['actor_name'] ?? $row['actor_id'] ?? '',
         'notes'       => $row['notes'] ?? '',
     ]);
 }
@@ -177,7 +194,7 @@ function format_submission(array $row): array
         'id'      => $row['id'],
         'placeId' => $row['place_id'],
         'status'  => $row['action'],
-        'submittedBy' => $row['actor_id'] ?? '',
+        'submittedBy' => $row['actor_name'] ?? $row['actor_id'] ?? '',
         'notes'   => $row['notes'] ?? '',
     ];
 }
