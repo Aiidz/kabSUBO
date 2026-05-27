@@ -62,7 +62,8 @@ const tabs: Array<{ label: string; value: QueueTab }> = [
 ];
 
 export default function AdminPage() {
-  const [user] = useState<AuthUser | null>(() => getStoredUser());
+  const [mounted, setMounted] = useState(false);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [submissions, setSubmissions] = useState<SubmissionRecord[]>([]);
   const [places, setPlaces] = useState<FoodPlace[]>([]);
   const [selectedSubmissionId, setSelectedSubmissionId] = useState<string | null>(
@@ -71,39 +72,54 @@ export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<QueueTab>("pending");
   const [searchQuery, setSearchQuery] = useState("");
   const [draft, setDraft] = useState<PlaceDraft | null>(null);
-  const [isLoading, setIsLoading] = useState(Boolean(user));
+  const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    async function loadAdminData() {
-      const [submissionResult, placeResult] = await Promise.all([
-        submissionsApi.list(),
-        placesApi.list(),
-      ]);
-      const nextSubmissions = submissionResult.data;
-
-      const initialSubmission =
-        nextSubmissions.find((submission) => submission.status === "pending") ??
-        nextSubmissions[0];
-      const initialPlace = placeResult.data.find(
-        (place) => place.id === initialSubmission?.placeId,
-      );
-
-      setSubmissions(nextSubmissions);
-      setPlaces(placeResult.data);
-      setSelectedSubmissionId(initialSubmission?.id ?? null);
-      setDraft(
-        initialSubmission && initialPlace
-          ? createDraft(initialPlace, initialSubmission.notes)
-          : null,
-      );
+    setMounted(true);
+    const storedUser = getStoredUser();
+    setUser(storedUser);
+    
+    if (!storedUser || storedUser.role !== "admin") {
       setIsLoading(false);
     }
+  }, []);
 
-    if (user?.role === "admin") {
+  useEffect(() => {
+    async function loadAdminData() {
+      try {
+        const [submissionResult, placeResult] = await Promise.all([
+          submissionsApi.list(),
+          placesApi.list(),
+        ]);
+        const nextSubmissions = submissionResult.data;
+
+        const initialSubmission =
+          nextSubmissions.find((submission) => submission.status === "pending") ??
+          nextSubmissions[0];
+        const initialPlace = placeResult.data.find(
+          (place) => place.id === initialSubmission?.placeId,
+        );
+
+        setSubmissions(nextSubmissions);
+        setPlaces(placeResult.data);
+        setSelectedSubmissionId(initialSubmission?.id ?? null);
+        setDraft(
+          initialSubmission && initialPlace
+            ? createDraft(initialPlace, initialSubmission.notes)
+            : null,
+        );
+      } catch (error) {
+        console.error("Failed to load admin data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    if (mounted && user?.role === "admin") {
       void loadAdminData();
     }
-  }, [user]);
+  }, [mounted, user]);
 
   const selectedSubmission = submissions.find(
     (submission) => submission.id === selectedSubmissionId,
@@ -298,6 +314,16 @@ export default function AdminPage() {
             ),
           }
         : currentDraft,
+    );
+  }
+
+  if (!mounted) {
+    return (
+      <main className="min-h-screen bg-[#fffaf0] px-4 pb-6 pt-28 text-[#073d33] sm:px-6">
+        <div className="mx-auto max-w-7xl">
+          <p className="font-semibold text-[#416763]">Loading...</p>
+        </div>
+      </main>
     );
   }
 

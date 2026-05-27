@@ -191,6 +191,10 @@ function toRadians(value: number) {
 }
 
 function isOpenNow(hours: string) {
+  if (/24\s*(hours|\/7)/i.test(hours)) {
+    return true;
+  }
+
   const match = hours.match(
     /(\d{1,2}):(\d{2})\s*(AM|PM)\s*-\s*(\d{1,2}):(\d{2})\s*(AM|PM)/i,
   );
