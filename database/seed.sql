@@ -203,3 +203,29 @@ INSERT IGNORE INTO reviews (place_id, user_id, rating, body) VALUES
 ('8c0b5da7-43af-4c9e-a9f4-574b68d80ef2', 'user-bongalos', 5, 'The cordon bleu is amazing! One of my favorites in CvSU.'),
 ('8c0b5da7-43af-4c9e-a9f4-574b68d80ef2', 'user-gaano', 4, 'Good food and very fast service. Perfect for quick lunch breaks.'),
 ('8c0b5da7-43af-4c9e-a9f4-574b68d80ef2', 'user-santos', 5, 'Chicken fingers are crispy and the gravy is delicious.');
+
+-- ============================================================
+-- Final Review & Contact Cleanup (Added May 27)
+-- ============================================================
+
+-- Extra reviews to reach 4-5 per resto
+INSERT IGNORE INTO reviews (place_id, user_id, rating, body) VALUES
+('85df6687-f3f0-4eff-88a9-7bbf770624d3', 'user-bongalos', 5, 'Classic go-to for late study sessions. The McFloat is a must!'),
+('place-campus-burger', 'user-gaano', 4, 'The buy 1 take 1 deals are the best for tight budgets.'),
+('place-campus-burger', 'user-legaspi', 5, 'The cheese sauce they use is actually really good.'),
+('place-indang-noodle', 'user-santos', 4, 'Good serving size of pancit. Very filling.'),
+('place-indang-noodle', 'user-bongalos', 4, 'Try their special mami during rainy season. Life changing.'),
+('place-main-gate-grill', 'user-legaspi', 5, 'The inasal is juicy and perfectly grilled.'),
+('place-main-gate-grill', 'user-gaano', 4, 'Very convenient spot right outside the gate.');
+
+-- Realistic contact info updates
+UPDATE places SET contact = '0912 345 6789' WHERE name = '7/11';
+UPDATE places SET contact = '0923 456 7890' WHERE name = 'Saluysoy';
+UPDATE places SET contact = '0934 567 8901' WHERE name = 'Ar dinners';
+UPDATE places SET contact = '0945 678 9012' WHERE name = 'McDonald\'s';
+UPDATE places SET contact = '0956 789 0123' WHERE name = 'BigBrew';
+UPDATE places SET contact = '0967 890 1234' WHERE name = 'Verses';
+UPDATE places SET contact = '0978 901 2345' WHERE name = 'CvSU Marketing';
+UPDATE places SET contact = '0989 012 3456' WHERE name = 'Bari Cafe';
+UPDATE places SET contact = '0990 123 4567' WHERE name = 'Jollibee';
+UPDATE places SET contact = '0915 222 3333' WHERE name = 'Tres Kusineros';
