@@ -204,10 +204,12 @@ export function KabsuboHome({ initialQuery = "" }: { initialQuery?: string }) {
 
   function handleUseLocation() {
     if (!navigator.geolocation) {
+      console.warn("Geolocation not supported by browser");
       setCampusFallback();
       return;
     }
 
+    console.log("Requesting geolocation (high accuracy)...");
     setLocationState("locating");
     navigator.geolocation.getCurrentPosition(
       (position) => {
@@ -216,16 +218,44 @@ export function KabsuboHome({ initialQuery = "" }: { initialQuery?: string }) {
           position.coords.latitude,
         ];
 
+        console.log("Geolocation result:", nextLocation);
+
         if (isWithinCvsuIndangBounds(nextLocation)) {
+          console.log("Location is within CvSU bounds");
           setUserLocation(nextLocation);
           setLocationState("found");
           return;
         }
 
+        console.warn("Location is outside CvSU bounds");
         setUserLocation(null);
         setLocationState("outside-range");
       },
-      () => setCampusFallback(),
+      () => {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const nextLocation: Coordinates = [
+              position.coords.longitude,
+              position.coords.latitude,
+            ];
+
+            console.log("Low accuracy geolocation result:", nextLocation);
+
+            if (isWithinCvsuIndangBounds(nextLocation)) {
+              setUserLocation(nextLocation);
+              setLocationState("found");
+              return;
+            }
+
+            setUserLocation(null);
+            setLocationState("outside-range");
+          },
+          () => {
+            setCampusFallback();
+          },
+          { enableHighAccuracy: false, timeout: 10000, maximumAge: 120000 },
+        );
+      },
       { enableHighAccuracy: true, timeout: 7000, maximumAge: 60000 },
     );
   }
@@ -564,6 +594,10 @@ function ResultsBackButton({
 function getLocationNotice(locationState: LocationState) {
   if (locationState === "outside-range") {
     return "You're outside the CvSU Indang food discovery area. Using campus center for distances and directions.";
+  }
+
+  if (locationState === "fallback") {
+    return "Could not determine your location. Using campus center for distances and directions.";
   }
 
   return null;
@@ -964,7 +998,7 @@ function PlaceDetailPanel({
           <div className="mt-3 space-y-3">
             {place.recentReviews.map((review) => (
               <article
-                key={`${review.author}-${review.date}`}
+                key={`${review.author}-${review.date}-${review.body}`}
                 className="border-b border-[#004b35]/18 pb-3 last:border-0"
               >
                 <div className="flex gap-3">

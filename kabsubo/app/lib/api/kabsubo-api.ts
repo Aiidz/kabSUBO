@@ -622,7 +622,11 @@ async function fromPhp<T>(
   });
 
   if (!response.ok) {
-    throw new Error(`PHP API request failed: ${response.status}`);
+    const body = await response.json().catch(() => ({}));
+    const message =
+      (body as { error?: string }).error ??
+      `PHP API request failed: ${response.status}`;
+    throw new Error(message);
   }
 
   const payload = (await response.json()) as { data?: T } | T;

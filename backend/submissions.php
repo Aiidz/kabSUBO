@@ -21,25 +21,36 @@ match ($method) {
 function list_submissions(PDO $db, ?string $status): void
 {
     $userId = require_auth($db);
-    require_role($db, $userId, ['admin', 'moderator']);
+
+    $stmt = $db->prepare("SELECT role FROM user_roles WHERE user_id = ?");
+    $stmt->execute([$userId]);
+    $role = $stmt->fetchColumn() ?: 'user';
+    $isAdmin = in_array($role, ['admin', 'moderator'], true);
+
+    $sql = "SELECT sa.*, p.display_name AS actor_name
+            FROM submissions_audit sa
+            LEFT JOIN profiles p ON p.id = sa.actor_id
+            JOIN places pl ON pl.id = sa.place_id";
+    $where = [];
+    $params = [];
+
     if ($status) {
-        $stmt = $db->prepare(
-            "SELECT sa.*, p.display_name AS actor_name
-             FROM submissions_audit sa
-             LEFT JOIN profiles p ON p.id = sa.actor_id
-             WHERE sa.action = ?
-             ORDER BY sa.created_at DESC"
-        );
-        $stmt->execute([$status]);
-    } else {
-        $stmt = $db->query(
-            "SELECT sa.*, p.display_name AS actor_name
-             FROM submissions_audit sa
-             LEFT JOIN profiles p ON p.id = sa.actor_id
-             ORDER BY sa.created_at DESC"
-        );
+        $where[] = "sa.action = ?";
+        $params[] = $status;
     }
 
+    if (!$isAdmin) {
+        $where[] = "pl.submitted_by = ?";
+        $params[] = $userId;
+    }
+
+    if ($where) {
+        $sql .= " WHERE " . implode(' AND ', $where);
+    }
+
+    $sql .= " ORDER BY sa.created_at DESC";
+    $stmt = $db->prepare($sql);
+    $stmt->execute($params);
     $rows = $stmt->fetchAll();
 
     json_response(array_map('format_submission', $rows));

@@ -246,9 +246,16 @@ export default function AdminPage() {
     }
 
     await submissionsApi.remove(selectedSubmission.id);
+    await placesApi.remove(selectedSubmission.placeId);
+
     setSubmissions((currentSubmissions) =>
       currentSubmissions.filter(
         (submission) => submission.id !== selectedSubmission.id,
+      ),
+    );
+    setPlaces((currentPlaces) =>
+      currentPlaces.filter(
+        (place) => place.id !== selectedSubmission.placeId,
       ),
     );
     const nextSubmission = submissions.find(
