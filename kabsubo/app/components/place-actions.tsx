@@ -2,6 +2,7 @@
 
 import { Heart, LogIn, MessageSquare, Send, Star } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
 import {
   favoritesApi,
@@ -11,11 +12,13 @@ import {
 import { getStoredUser } from "@/app/lib/auth/session";
 
 export function PlaceActions({ placeId }: { placeId: string }) {
+  const router = useRouter();
   const [user] = useState<AuthUser | null>(() => getStoredUser());
   const [isFavorite, setIsFavorite] = useState(false);
   const [rating, setRating] = useState(5);
   const [reviewBody, setReviewBody] = useState("");
   const [message, setMessage] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     async function loadFavorites(currentUser: AuthUser) {
@@ -52,14 +55,25 @@ export function PlaceActions({ placeId }: { placeId: string }) {
       return;
     }
 
-    await reviewsApi.create({
-      placeId,
-      author: user.name,
-      rating,
-      body: reviewBody.trim(),
-    });
-    setReviewBody("");
-    setMessage("Review submitted.");
+    setIsSubmitting(true);
+    setMessage(null);
+
+    try {
+      await reviewsApi.create({
+        placeId,
+        author: user.name,
+        rating,
+        body: reviewBody.trim(),
+      });
+      setReviewBody("");
+      setMessage("Review submitted.");
+      router.refresh();
+    } catch (error) {
+      console.error("Failed to submit review:", error);
+      setMessage("Failed to submit review.");
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   if (!user) {
@@ -135,16 +149,20 @@ export function PlaceActions({ placeId }: { placeId: string }) {
         </label>
         <button
           type="submit"
-          disabled={!reviewBody.trim()}
+          disabled={!reviewBody.trim() || isSubmitting}
           className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-md bg-[#171714] px-3 text-sm font-black text-white transition hover:bg-[#2a2822] disabled:cursor-not-allowed disabled:opacity-45"
         >
           <Send size={15} aria-hidden="true" />
-          Submit review
+          {isSubmitting ? "Submitting..." : "Submit review"}
         </button>
       </form>
 
       {message && (
-        <p className="mt-3 inline-flex items-center gap-2 rounded-md bg-[#eef7ef] px-3 py-2 text-sm font-black text-[#185840]">
+        <p className={`mt-3 inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-black ${
+          message.includes("Failed")
+            ? "bg-[#fff4e7] text-[#7b3320]"
+            : "bg-[#eef7ef] text-[#185840]"
+        }`}>
           <Star size={14} fill="currentColor" aria-hidden="true" />
           {message}
         </p>
