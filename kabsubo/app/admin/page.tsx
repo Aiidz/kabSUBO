@@ -472,24 +472,28 @@ export default function AdminPage() {
                           <Edit3 size={15} aria-hidden="true" />
                           Save edits
                         </button>
-                        <button
-                          type="button"
-                          onClick={() => void updateModerationStatus("approved")}
-                          disabled={isSaving}
-                          className="inline-flex h-10 items-center gap-2 rounded-full bg-[#004b35] px-4 text-sm font-black text-[#fffaf0] transition hover:bg-[#073d33] disabled:opacity-50"
-                        >
-                          <Check size={15} aria-hidden="true" />
-                          Approve
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => void updateModerationStatus("rejected")}
-                          disabled={isSaving}
-                          className="inline-flex h-10 items-center gap-2 rounded-full border border-[#7b3320]/30 bg-[#fff3e1] px-4 text-sm font-black text-[#7b3320] transition hover:border-[#7b3320] disabled:opacity-50"
-                        >
-                          <X size={15} aria-hidden="true" />
-                          Reject
-                        </button>
+                        {selectedSubmission.status === "pending" && (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => void updateModerationStatus("approved")}
+                              disabled={isSaving}
+                              className="inline-flex h-10 items-center gap-2 rounded-full bg-[#004b35] px-4 text-sm font-black text-[#fffaf0] transition hover:bg-[#073d33] disabled:opacity-50"
+                            >
+                              <Check size={15} aria-hidden="true" />
+                              Approve
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => void updateModerationStatus("rejected")}
+                              disabled={isSaving}
+                              className="inline-flex h-10 items-center gap-2 rounded-full border border-[#7b3320]/30 bg-[#fff3e1] px-4 text-sm font-black text-[#7b3320] transition hover:border-[#7b3320] disabled:opacity-50"
+                            >
+                              <X size={15} aria-hidden="true" />
+                              Reject
+                            </button>
+                          </>
+                        )}
                       </div>
                     </div>
                   </section>
@@ -720,7 +724,7 @@ function QueueCard({
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h2 className="truncate text-lg font-black">
-            {place?.name ?? submission.placeId}
+            {place?.name ?? "[Deleted place]"}
           </h2>
           <p className="mt-1 text-xs font-semibold text-[#416763]">
             Submitted by {submission.submittedBy}

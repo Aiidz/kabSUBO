@@ -178,7 +178,7 @@ function update_submission(PDO $db, ?string $id): void
     }
 
     $stmt = $db->prepare(
-        "SELECT sa.*, p.display_name AS actor_name, pl.name AS place_name
+        "SELECT sa.*, p.display_name AS actor_name
          FROM submissions_audit sa
          LEFT JOIN profiles p ON p.id = sa.actor_id
          WHERE sa.id = ?"
