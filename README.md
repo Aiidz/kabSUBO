@@ -50,6 +50,17 @@ npm run setup
 
 ---
 
+#### Running with XAMPP
+
+1. **Backend Deployment**: Copy the `backend/` folder to `C:\xampp\htdocs\kabsubo\`.
+2. **Start Services**: Open XAMPP Control Panel and start **Apache** and **MySQL**.
+3. **Database Config**: 
+   - Either create a MySQL user `kabsubo` with password `kabsubo_dev` in phpMyAdmin,
+   - OR edit `backend/db_config.php` to use your XAMPP credentials (usually `root` and no password).
+4. **Frontend**: In your terminal, go to the `kabsubo` folder and run `npm run dev`.
+5. **Access**: Open `http://localhost:3000` in your browser.
+
+---
 #### The Manual Way
 
 #### 1. Database
