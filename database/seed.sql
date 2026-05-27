@@ -77,3 +77,33 @@ INSERT IGNORE INTO submissions_audit (place_id, actor_id, action, notes) VALUES
     ('place-green-cup-cafe',  'user-legaspi',  'approved', 'Auto-approved during seed.'),
     ('place-campus-burger',   'user-santos',   'pending',  'Initial submission.'),
     ('place-campus-burger',   'user-santos',   'approved', 'Auto-approved during seed.');
+
+-- ============================================================
+-- New Restaurants (Added May 2026)
+-- ============================================================
+INSERT IGNORE INTO places (id, name, slug, type, description, lat, lng, address, hours_json, price_range, photo_urls, contact, submitted_by, status) VALUES
+    ('68de0bba-1ddf-4a9a-846f-e6a976908ad6', '7/11', '711', 'Convenience Store', 'Pit stop for snacks, drinks & daily essentials', 14.195928, 120.882102, 'Indang, Cavite', '"Open 24 Hours"', 'PHP 35-49', '["https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS4mpqgdDjKP6gSgHGmCC5n7A8GO4ZHK_StyA&s"]', 'Pending contact', 'user-gaano', 'approved'),
+    ('79d4d290-d0a9-4c61-b03a-b69b210a98b1', 'Saluysoy', 'saluysoy', 'Carinderia', 'CvSU Food Service Facilities', 14.201507, 120.882369, 'Indang, Cavite', '"7:00 AM - 7:00 PM"', 'PHP 20-55', '["https://cvsu.edu.ph/wp-content/uploads/2022/12/IMG-5100-scaled.jpg"]', 'Pending contact', 'user-admin', 'approved'),
+    ('7caa992c-795d-4e64-9d10-6f899ffa9966', 'Ar dinners', 'ar-dinners', 'Restaurant', 'Sulit Meal. Sarap Always', 14.195533, 120.881567, 'Indang, Cavite', '"8:00 AM - 8:00 PM"', 'PHP 109-179', '["https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT8F_nly2Uo0FYkOrlOx-YK0DbExH-6pleysA&s"]', 'Pending contact', 'user-gaano', 'approved'),
+    ('85df6687-f3f0-4eff-88a9-7bbf770624d3', 'McDonald\'s', 'mcdonalds', 'Fast Food', 'Classic, long-running fast-food chain known for its burgers & fries.', 14.195090, 120.884046, 'Indang, Cavite', '"Open 24 hours"', 'PHP 59-103', '["https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ6wPAd4dFK5u62cjD4hI9QQ0lfHV3MLm3fwg&s"]', 'Pending contact', 'user-admin', 'approved'),
+    ('926ffa9c-b942-4b7d-864c-80645160526b', 'BigBrew', 'bigbrew', 'Drinks', 'BREW SUCCESS WITH BIGBREW', 14.201028, 120.879341, 'Indang, Cavite', '"8:00 AM - 8:00 PM"', 'PHP 39-49', '["https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRRIS-_5IJUukGC8rW4MMI2sQKx60Y9tpv6kQ&s"]', 'Pending contact', 'user-admin', 'approved'),
+    ('c252bb5f-fc2c-424f-8ac6-75424da7498b', 'CvSU Marketing', 'cvsu-marketing', 'Carinderia', 'CvSU Food Service Facilities', 14.198892, 120.879439, 'Indang, Cavite', '"7:00 AM - 7:00 PM"', 'PHP 20-50', '["https://scontent.fmnl30-1.fna.fbcdn.net/v/t39.30808-6/480952340_619581057494343_8549995276805973930_n.jpg?_nc_cat=106&ccb=1-7&_nc_sid=833d8c&_nc_ohc=q9nKh-I-8hYQ7kNvwEdQBYB&_nc_oc=AdoS2bKnj14IMOObxBcPvUzgZVTw87ImlP6817PZnA9WSfRflplon4oc20jVY5Ts14o&_nc_zt=23&_nc_ht=scontent.fmnl30-1.fna&_nc_gid=-maV-5w49yRfXQQSoK5lPA&_nc_ss=7b2a8&oh=00_Af7asOj2JSqYgdN3dkvBuYF4DL81x0dO82P_jdUH609t7w&oe=6A1C8889"]', 'Pending contact', 'user-admin', 'approved'),
+    ('cafd3270-2769-4095-a988-8d60ebd78e0d', 'Bari Cafe', 'bari-cafe', 'Cafe', 'Every table tells a story. Tara kain sa Bari Cafe', 14.195161, 120.880080, 'Indang, Cavite', '"8:00 AM - 9:00 PM"', 'PHP 165-190', '["https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQQ6dOH5tgXU2tgrtdqvH8qdzKxGmzMUWaBLg&s"]', 'Pending contact', 'user-admin', 'approved'),
+    ('kokoks-griddle-grill', 'Kokok\'s Griddle & Grill', 'kokoks-griddle-grill', 'Grill house', 'Chicken inasal, barbecue platters, and group meals submitted for review.', 14.1938, 120.8842, 'Bancod, Indang, Cavite', '"8:00 AM - 11:00 PM"', 'PHP 99-200', '["https://images.unsplash.com/photo-1598515214211-89d3c73ae83b?auto=format&fit=crop&w=640&q=80"]', '0919 456 0332', 'user-legaspi', 'pending');
+
+-- Audit entries for new restaurants
+INSERT IGNORE INTO submissions_audit (place_id, actor_id, action, notes) VALUES
+    ('68de0bba-1ddf-4a9a-846f-e6a976908ad6', 'user-admin', 'approved', 'Submitted via stored procedure.'),
+    ('79d4d290-d0a9-4c61-b03a-b69b210a98b1', 'user-admin', 'approved', 'Submitted via stored procedure.'),
+    ('7caa992c-795d-4e64-9d10-6f899ffa9966', 'user-admin', 'approved', 'Submitted via stored procedure.'),
+    ('85df6687-f3f0-4eff-88a9-7bbf770624d3', 'user-admin', 'approved', 'Submitted via stored procedure.'),
+    ('926ffa9c-b942-4b7d-864c-80645160526b', 'user-admin', 'approved', 'Submitted via stored procedure.'),
+    ('c252bb5f-fc2c-424f-8ac6-75424da7498b', 'user-admin', 'approved', 'Submitted via stored procedure.'),
+    ('cafd3270-2769-4095-a988-8d60ebd78e0d', 'user-admin', 'approved', 'Submitted via stored procedure.'),
+    ('kokoks-griddle-grill', 'user-legaspi', 'pending',  'Initial submission.');
+
+-- Menu items for Kokok's Griddle & Grill
+INSERT IGNORE INTO menu_items (place_id, name, category, description, price, is_best_seller, tags) VALUES
+    ('kokoks-griddle-grill', 'Chicken inasal', 'Grilled', 'Charcoal-grilled chicken served with rice.', 99, TRUE, '["chicken", "grill", "rice meal"]'),
+    ('kokoks-griddle-grill', 'Barbecue platter', 'Sharing', 'Skewers for small groups after class.', 199, TRUE, '["barbecue", "sharing", "dinner"]'),
+    ('kokoks-griddle-grill', 'Pancit canton', 'Noodles', 'Quick noodle order for merienda.', 85, FALSE, '["noodles", "snack", "merienda"]');
