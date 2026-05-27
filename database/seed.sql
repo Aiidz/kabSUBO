@@ -144,3 +144,12 @@ INSERT IGNORE INTO menu_items (place_id, name, category, description, price, is_
 ('be5151ee-da8c-47c6-97d5-604f3ef9c817', 'Chicken Leg Quarter', 'Chicken', 'Roasted chicken leg.', 115.00, 1, '["chicken", "roasted", "lunch"]'),
 ('be5151ee-da8c-47c6-97d5-604f3ef9c817', 'Pork Sinigang', 'Soup/Main', 'Sour tamarind soup with pork and veggies.', 120.00, 1, '["soup", "pork", "lunch"]'),
 ('be5151ee-da8c-47c6-97d5-604f3ef9c817', 'Liempo (Grilled)', 'Grilled', 'Marinated grilled pork belly.', 110.00, 1, '["grill", "pork", "rice meal"]');
+
+-- CvSU University Mall (Added May 27)
+INSERT IGNORE INTO places (id, name, slug, type, description, lat, lng, address, hours_json, price_range, photo_urls, contact, submitted_by, status) VALUES
+('89668341-e3df-41a6-84ac-8357a0f4d842', 'CvSU University Mall', 'cvsu-university-mall', 'Food Stall', 'CvSU Food Facilities', 14.196082, 120.882352, 'Indang, Cavite', '"7:00 AM - 7:00 PM"', 'PHP 25-55', '["https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSk_GCRuCZ9HnckBEKxY9gMqofetuSc6oh3GA&s"]', '0999 000 0000', 'user-admin', 'approved');
+
+INSERT IGNORE INTO menu_items (place_id, name, category, description, price, is_best_seller, tags) VALUES
+('89668341-e3df-41a6-84ac-8357a0f4d842', 'Siomai Rice', 'Rice Meals', 'Pork siomai with rice and chili garlic.', 40.00, 1, '["siomai", "rice", "lunch"]'),
+('89668341-e3df-41a6-84ac-8357a0f4d842', 'Hotdog Sandwich', 'Snacks', 'Classic hotdog in a bun with dressing.', 35.00, 1, '["hotdog", "snack", "mall"]'),
+('89668341-e3df-41a6-84ac-8357a0f4d842', 'Waffles', 'Snacks', 'Freshly baked waffles with chocolate or cheese.', 25.00, 1, '["waffle", "sweet", "snack"]');
