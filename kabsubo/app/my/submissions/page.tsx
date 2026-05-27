@@ -92,7 +92,9 @@ export default function MySubmissionsPage() {
               >
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div>
-                    <h2 className="text-xl font-black">{submission.placeId}</h2>
+                    <h2 className="text-xl font-black">
+                      {submission.placeName || submission.placeId}
+                    </h2>
                     <p className="mt-1 text-sm font-semibold text-black/58">
                       Submitted by {submission.submittedBy}
                     </p>

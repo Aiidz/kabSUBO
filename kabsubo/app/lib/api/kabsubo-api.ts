@@ -61,6 +61,7 @@ export type SubmissionStatus = "pending" | "approved" | "rejected";
 export type SubmissionRecord = {
   id: string;
   placeId: string;
+  placeName?: string;
   status: SubmissionStatus;
   submittedBy: string;
   ownerUserId?: string;
@@ -92,6 +93,7 @@ let mockUsers: Array<AuthUser & { password: string }> = [
 let mockSubmissions: SubmissionRecord[] = mockPlaces.map((place) => ({
   id: `submission-${place.id}`,
   placeId: place.id,
+  placeName: place.name,
   status: place.status === "approved" ? "approved" : "pending",
   submittedBy: place.submittedBy,
   ownerUserId: "user-demo-student",
@@ -532,6 +534,7 @@ export const submissionsApi = {
     return fromMock({
       id: `submission-${createdPlace.data.id}`,
       placeId: createdPlace.data.id,
+      placeName: createdPlace.data.name,
       status: "pending",
       submittedBy: input.submittedBy,
       ownerUserId,
