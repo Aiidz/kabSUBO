@@ -131,3 +131,16 @@ INSERT IGNORE INTO menu_items (place_id, name, category, description, price, is_
 ('cafd3270-2769-4095-a988-8d60ebd78e0d', 'Spanish Latte', 'Coffee', 'Sweet and creamy espresso-based drink.', 145.00, 1, '["coffee", "latte", "espresso"]'),
 ('cafd3270-2769-4095-a988-8d60ebd78e0d', 'Carbonara Pasta', 'Pasta', 'Creamy white sauce pasta with bacon bits.', 165.00, 1, '["pasta", "italian", "lunch"]'),
 ('cafd3270-2769-4095-a988-8d60ebd78e0d', 'Beef Quesadilla', 'Snacks', 'Grilled tortilla filled with beef and cheese.', 130.00, 0, '["mexican", "snack", "cheese"]');
+
+-- Jollibee & Verses (Added May 27)
+INSERT IGNORE INTO places (id, name, slug, type, description, lat, lng, address, hours_json, price_range, photo_urls, contact, submitted_by, status) VALUES
+('f31b6858-9c73-4712-aaae-eec774758a61', 'Jollibee', 'jollibee', 'Fast Food', 'Langhap-Sarap Bida ang sarap/saya! No. 1 Sa Saya', 14.196159, 120.877898, 'Indang, Cavite', '"Open 24 hours"', 'PHP 40-120', '["https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/Indang%2CCavitejf8378_14.JPG/1280px-Indang%2CCavitejf8378_14.JPG"]', 'Pending contact', 'user-admin', 'approved'),
+('be5151ee-da8c-47c6-97d5-604f3ef9c817', 'Verses', 'verses', 'Restaurant', 'Verses Restaurant', 14.195398, 120.879955, 'Indang, Cavite', '"8:00 AM - 8:00 PM"', 'PHP 110-120', '["https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcST77au9xbqc0xVaeLKvrdJpU4w-jT7I_-y8g&s"]', 'Pending contact', 'user-admin', 'approved');
+
+INSERT IGNORE INTO menu_items (place_id, name, category, description, price, is_best_seller, tags) VALUES
+('f31b6858-9c73-4712-aaae-eec774758a61', 'Chickenjoy', 'Chicken', 'Crispy fried chicken.', 85.00, 1, '["chicken", "fried", "jollibee"]'),
+('f31b6858-9c73-4712-aaae-eec774758a61', 'Jolly Spaghetti', 'Pasta', 'Sweet-style spaghetti with ham and cheese.', 60.00, 1, '["pasta", "jollibee", "sweet"]'),
+('f31b6858-9c73-4712-aaae-eec774758a61', 'Yumburger', 'Burgers', 'The classic Jollibee burger.', 40.00, 0, '["burger", "snack", "budget"]'),
+('be5151ee-da8c-47c6-97d5-604f3ef9c817', 'Chicken Leg Quarter', 'Chicken', 'Roasted chicken leg.', 115.00, 1, '["chicken", "roasted", "lunch"]'),
+('be5151ee-da8c-47c6-97d5-604f3ef9c817', 'Pork Sinigang', 'Soup/Main', 'Sour tamarind soup with pork and veggies.', 120.00, 1, '["soup", "pork", "lunch"]'),
+('be5151ee-da8c-47c6-97d5-604f3ef9c817', 'Liempo (Grilled)', 'Grilled', 'Marinated grilled pork belly.', 110.00, 1, '["grill", "pork", "rice meal"]');
