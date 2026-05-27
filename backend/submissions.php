@@ -27,7 +27,7 @@ function list_submissions(PDO $db, ?string $status): void
     $role = $stmt->fetchColumn() ?: 'user';
     $isAdmin = in_array($role, ['admin', 'moderator'], true);
 
-    $sql = "SELECT sa.*, p.display_name AS actor_name
+    $sql = "SELECT sa.*, p.display_name AS actor_name, pl.name AS place_name
             FROM submissions_audit sa
             LEFT JOIN profiles p ON p.id = sa.actor_id
             JOIN places pl ON pl.id = sa.place_id";
@@ -156,7 +156,7 @@ function update_submission(PDO $db, ?string $id): void
     }
 
     $stmt = $db->prepare(
-        "SELECT sa.*, p.display_name AS actor_name
+        "SELECT sa.*, p.display_name AS actor_name, pl.name AS place_name
          FROM submissions_audit sa
          LEFT JOIN profiles p ON p.id = sa.actor_id
          WHERE sa.id = ?"
@@ -172,10 +172,14 @@ function update_submission(PDO $db, ?string $id): void
     $placeStmt = $db->prepare("SELECT status FROM places WHERE id = ?");
     $placeStmt->execute([$row['place_id']]);
     $placeStatus = $placeStmt->fetchColumn();
+    $placeNameStmt = $db->prepare("SELECT name FROM places WHERE id = ?");
+    $placeNameStmt->execute([$row['place_id']]);
+    $placeName = $placeNameStmt->fetchColumn();
 
     json_response([
         'id'          => $row['id'],
         'placeId'     => $row['place_id'],
+        'placeName'   => $placeName ?? $row['place_id'],
         'status'      => $placeStatus ?: $row['action'],
         'submittedBy' => $row['actor_name'] ?? $row['actor_id'] ?? '',
         'notes'       => $row['notes'] ?? '',
@@ -204,6 +208,7 @@ function format_submission(array $row): array
     return [
         'id'      => $row['id'],
         'placeId' => $row['place_id'],
+        'placeName' => $row['place_name'] ?? $row['place_id'],
         'status'  => $row['action'],
         'submittedBy' => $row['actor_name'] ?? $row['actor_id'] ?? '',
         'notes'   => $row['notes'] ?? '',
