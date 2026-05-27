@@ -3,14 +3,16 @@
 import { ArrowLeft, Bot, Send, Sparkles } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { FormEvent, useMemo, useState } from "react";
-import { campusCenter, foodPlaces } from "@/app/data/places";
+import { FormEvent, useEffect, useMemo, useState } from "react";
+import { campusCenter } from "@/app/data/places";
 import {
   createChatMessage,
   createKabsuboReply,
   type ChatMessage,
 } from "@/app/lib/chatbot/kabsubo-rag";
 import type { Coordinates } from "@/app/components/map-canvas";
+import { placesApi } from "@/app/lib/api/kabsubo-api";
+import type { FoodPlace } from "@/app/data/places";
 
 const starterPrompts = [
   "nearest places",
@@ -19,32 +21,48 @@ const starterPrompts = [
   "what is open now?",
 ];
 
+type ChatPlace = FoodPlace & {
+  distanceKm: number;
+  openNow: boolean;
+};
+
 export default function ChatbotPage() {
   const [chatInput, setChatInput] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const chatbotPlaces = useMemo(
-    () =>
-      foodPlaces
-        .filter((place) => place.status === "approved")
-        .map((place) => ({
+  const [places, setPlaces] = useState<ChatPlace[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadPlaces() {
+      try {
+        const result = await placesApi.listApproved();
+        const chatPlaces = result.data.map((place) => ({
           ...place,
           distanceKm: getDistanceKm(campusCenter, place.coordinates),
           openNow: isOpenNow(place.hours),
-        })),
-    [],
-  );
+        }));
+        setPlaces(chatPlaces);
+      } catch (error) {
+        console.error("Failed to load chatbot data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    void loadPlaces();
+  }, []);
 
   function sendMessage(message: string) {
     const nextMessage = message.trim();
 
-    if (!nextMessage) {
+    if (!nextMessage || isLoading) {
       return;
     }
 
     const reply = createKabsuboReply({
       message: nextMessage,
       originLabel: "campus center",
-      places: chatbotPlaces,
+      places,
       selectedPlaceIds: [],
     });
 
@@ -122,7 +140,11 @@ export default function ChatbotPage() {
             className="mt-8 min-h-0 flex-1 space-y-3 overflow-y-auto rounded-lg border border-[#004b35]/10 bg-[#fffaf0] p-4"
             aria-label="Chat messages"
           >
-            {messages.length === 0 ? (
+            {isLoading ? (
+              <div className="rounded-xl border border-[#004b35]/15 bg-[#f6efda] px-4 py-3 text-sm font-semibold leading-5 text-[#416763]">
+                Bot is preparing CvSU food data...
+              </div>
+            ) : messages.length === 0 ? (
               <div className="rounded-xl border border-[#004b35]/15 bg-[#f6efda] px-4 py-3 text-sm font-semibold leading-5 text-[#416763]">
                 Ready when cravings get confusing.
               </div>
@@ -154,11 +176,13 @@ export default function ChatbotPage() {
               value={chatInput}
               onChange={(event) => setChatInput(event.target.value)}
               className="h-11 min-w-0 flex-1 rounded-md border border-[#004b35] bg-[#fffdf4] px-3 text-sm font-semibold outline-none placeholder:text-[#416763]"
-              placeholder="Ask Kabsubo..."
+              placeholder={isLoading ? "Loading data..." : "Ask Kabsubo..."}
+              disabled={isLoading}
             />
             <button
               type="submit"
-              className="grid size-11 shrink-0 place-items-center rounded-md bg-[#004b35] text-[#fffaf0] transition hover:bg-[#073d33]"
+              disabled={isLoading || !chatInput.trim()}
+              className="grid size-11 shrink-0 place-items-center rounded-md bg-[#004b35] text-[#fffaf0] transition hover:bg-[#073d33] disabled:cursor-not-allowed disabled:opacity-40"
               aria-label="Send message"
             >
               <Send size={18} aria-hidden="true" />
