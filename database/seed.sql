@@ -153,3 +153,38 @@ INSERT IGNORE INTO menu_items (place_id, name, category, description, price, is_
 ('89668341-e3df-41a6-84ac-8357a0f4d842', 'Siomai Rice', 'Rice Meals', 'Pork siomai with rice and chili garlic.', 40.00, 1, '["siomai", "rice", "lunch"]'),
 ('89668341-e3df-41a6-84ac-8357a0f4d842', 'Hotdog Sandwich', 'Snacks', 'Classic hotdog in a bun with dressing.', 35.00, 1, '["hotdog", "snack", "mall"]'),
 ('89668341-e3df-41a6-84ac-8357a0f4d842', 'Waffles', 'Snacks', 'Freshly baked waffles with chocolate or cheese.', 25.00, 1, '["waffle", "sweet", "snack"]');
+
+-- ============================================================
+-- Student Reviews (Added May 27)
+-- ============================================================
+INSERT IGNORE INTO reviews (place_id, user_id, rating, body) VALUES
+('68de0bba-1ddf-4a9a-846f-e6a976908ad6', 'user-bongalos', 5, 'Best place for late night study snacks. Slurpee is always life saving!'),
+('68de0bba-1ddf-4a9a-846f-e6a976908ad6', 'user-gaano', 4, 'Quick and easy, but can get really crowded during lunch breaks.'),
+('68de0bba-1ddf-4a9a-846f-e6a976908ad6', 'user-santos', 4, 'Reliable 24/7 spot. The Busog meals are actually decent for the price.'),
+('79d4d290-d0a9-4c61-b03a-b69b210a98b1', 'user-legaspi', 5, 'The best beef pares in Indang! Very affordable for students.'),
+('79d4d290-d0a9-4c61-b03a-b69b210a98b1', 'user-gaano', 5, 'Solid lugaw with egg. Perfect for rainy days on campus.'),
+('79d4d290-d0a9-4c61-b03a-b69b210a98b1', 'user-bongalos', 4, 'Good portions and very friendly staff. Highly recommended!'),
+('7caa992c-795d-4e64-9d10-6f899ffa9966', 'user-santos', 5, 'The special tapa is amazing. Worth the short walk from the gate.'),
+('7caa992c-795d-4e64-9d10-6f899ffa9966', 'user-legaspi', 4, 'Nice place to chill and eat. The sizzling sisig is a must-try.'),
+('7caa992c-795d-4e64-9d10-6f899ffa9966', 'user-bongalos', 5, 'Great value for money. The 6pcs wings are perfect for sharing.'),
+('85df6687-f3f0-4eff-88a9-7bbf770624d3', 'user-gaano', 5, 'Consistent quality as always. Love the new space!'),
+('85df6687-f3f0-4eff-88a9-7bbf770624d3', 'user-santos', 4, 'A bit far from some colleges but always a good choice for a treat.'),
+('85df6687-f3f0-4eff-88a9-7bbf770624d3', 'user-legaspi', 5, 'Fast service and very clean environment. Perfect for group meetings.'),
+('926ffa9c-b942-4b7d-864c-80645160526b', 'user-bongalos', 5, 'Best milktea for the price! Dark chocolate is my go-to.'),
+('926ffa9c-b942-4b7d-864c-80645160526b', 'user-gaano', 4, 'Quick service, but sometimes the line gets really long.'),
+('926ffa9c-b942-4b7d-864c-80645160526b', 'user-santos', 5, 'Affordable and refreshing. Love the Okinawa flavor.'),
+('be5151ee-da8c-47c6-97d5-604f3ef9c817', 'user-legaspi', 5, 'Best place for a proper lunch. The sinigang is very authentic!'),
+('be5151ee-da8c-47c6-97d5-604f3ef9c817', 'user-bongalos', 4, 'Good food, a bit pricier than stalls but definitely worth it.'),
+('be5151ee-da8c-47c6-97d5-604f3ef9c817', 'user-gaano', 5, 'The grilled liempo is superb. Great atmosphere for students.'),
+('c252bb5f-fc2c-424f-8ac6-75424da7498b', 'user-santos', 4, 'Classic university food. Affordable and convenient.'),
+('c252bb5f-fc2c-424f-8ac6-75424da7498b', 'user-legaspi', 4, 'Very budget friendly. The pork adobo tastes like home.'),
+('c252bb5f-fc2c-424f-8ac6-75424da7498b', 'user-gaano', 3, 'Can be quite busy and hot during peak hours, but food is good.'),
+('cafd3270-2769-4095-a988-8d60ebd78e0d', 'user-bongalos', 5, 'My favorite study spot. Spanish latte is the best in town.'),
+('cafd3270-2769-4095-a988-8d60ebd78e0d', 'user-santos', 5, 'Carbonara is so creamy! Perfect place to relax after class.'),
+('cafd3270-2769-4095-a988-8d60ebd78e0d', 'user-legaspi', 4, 'Great aesthetics and vibes. Food is also very delicious.'),
+('f31b6858-9c73-4712-aaae-eec774758a61', 'user-gaano', 5, 'Nothing beats Chickenjoy. So glad there is one nearby!'),
+('f31b6858-9c73-4712-aaae-eec774758a61', 'user-bongalos', 4, 'The line can be long but service is generally fast.'),
+('f31b6858-9c73-4712-aaae-eec774758a61', 'user-santos', 5, 'Best spaghetti for students. Always brings back childhood memories.'),
+('89668341-e3df-41a6-84ac-8357a0f4d842', 'user-legaspi', 4, 'Lots of choices here. The hotdog sandwich is a quick snack win.'),
+('89668341-e3df-41a6-84ac-8357a0f4d842', 'user-gaano', 5, 'Love the freshly baked waffles! Very student-friendly prices.'),
+('89668341-e3df-41a6-84ac-8357a0f4d842', 'user-santos', 4, 'Convenient location for a quick bite between classes.');
