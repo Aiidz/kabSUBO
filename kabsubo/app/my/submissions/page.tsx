@@ -11,9 +11,21 @@ import {
 import { getStoredUser } from "@/app/lib/auth/session";
 
 export default function MySubmissionsPage() {
-  const [user] = useState<AuthUser | null>(() => getStoredUser());
+  const [mounted, setMounted] = useState(false);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [submissions, setSubmissions] = useState<SubmissionRecord[]>([]);
-  const [isLoading, setIsLoading] = useState(Boolean(user));
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    setMounted(true);
+    const storedUser = getStoredUser();
+    setUser(storedUser);
+    
+    if (!storedUser) {
+      setIsLoading(false);
+    }
+  }, []);
+
   const ownSubmissions = useMemo(
     () =>
       user
@@ -28,15 +40,30 @@ export default function MySubmissionsPage() {
 
   useEffect(() => {
     async function loadSubmissions() {
-      const result = await submissionsApi.list();
-      setSubmissions(result.data);
-      setIsLoading(false);
+      try {
+        const result = await submissionsApi.list();
+        setSubmissions(result.data);
+      } catch (error) {
+        console.error("Failed to load submissions:", error);
+      } finally {
+        setIsLoading(false);
+      }
     }
 
-    if (user) {
+    if (mounted && user) {
       void loadSubmissions();
     }
-  }, [user]);
+  }, [mounted, user]);
+
+  if (!mounted) {
+    return (
+      <main className="min-h-screen bg-[#f6f3ec] px-5 pb-6 pt-28 text-[#171714]">
+        <div className="mx-auto max-w-5xl">
+          <p className="font-semibold text-black/60">Loading...</p>
+        </div>
+      </main>
+    );
+  }
 
   if (!user) {
     return (
