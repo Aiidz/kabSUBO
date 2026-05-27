@@ -95,9 +95,31 @@ function create_submission(PDO $db): void
         $body['contact'] ?? null
     ]);
 
+    // Insert menu items
+    $menuItems = $body['menuItems'] ?? [];
+    if (!empty($menuItems)) {
+        $stmt = $db->prepare(
+            "INSERT INTO menu_items (id, place_id, name, category, description, price, is_best_seller, tags) 
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+        );
+        foreach ($menuItems as $item) {
+            $stmt->execute([
+                generate_uuid_v4(),
+                $placeId,
+                $item['name'] ?? '',
+                $item['category'] ?? '',
+                $item['prepNote'] ?? '',
+                $item['price'] ?? 0,
+                ($item['isBestSeller'] ?? false) ? 1 : 0,
+                isset($item['tags']) ? json_encode($item['tags']) : '[]'
+            ]);
+        }
+    }
+
     json_response([
         'id'          => $auditId,
         'placeId'     => $placeId,
+        'placeName'   => $body['name'] ?? $placeId,
         'status'      => 'pending',
         'submittedBy' => $submittedByName,
     ]);
