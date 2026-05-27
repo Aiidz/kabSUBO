@@ -81,11 +81,14 @@ input {
 }
 
 .maplibregl-popup-content {
-  overflow: hidden;
-  border-radius: 8px;
   padding: 0;
   color: #171714;
-  box-shadow: 0 18px 36px rgb(0 0 0 / 0.2);
+  background: none;
+  box-shadow: none;
+}
+
+.main-map-wrapper {
+  overflow: visible !important;
 }
 
 .maplibregl-popup-tip {
@@ -98,7 +101,15 @@ input {
 
 .food-popup-card {
   width: 286px;
+  overflow: hidden;
+  border-radius: 10px;
   background: rgb(255 250 240 / 0.96);
+  box-shadow: 0 18px 36px rgb(0 0 0 / 0.2);
+}
+
+.food-popup.maplibregl-popup {
+  overflow: visible;
+  pointer-events: auto;
 }
 
 .food-popup-image {

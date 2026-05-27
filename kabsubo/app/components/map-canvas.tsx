@@ -102,6 +102,14 @@ export function MapCanvas({
     });
 
     mapRef.current = map;
+
+    map.on("error", (e) => {
+      if (e?.error?.status === 0 || e?.error?.status === 404) {
+        return;
+      }
+      console.error(e?.error ?? e);
+    });
+
     map.once("load", () => {
       if (!isDisposed) {
         setMapReady(true);
