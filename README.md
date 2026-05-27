@@ -39,6 +39,19 @@ git clone https://github.com/Aiidz/kabSUBO.git
 cd kabSUBO
 ```
 
+#### The Easy Way (Recommended)
+
+If you have MySQL running, you can set up everything (dependencies, `.env.local`, and database) with one command:
+
+```bash
+cd kabsubo
+npm run setup
+```
+
+---
+
+#### The Manual Way
+
 #### 1. Database
 
 Create the database and import the schema + seed data:
