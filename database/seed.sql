@@ -188,3 +188,18 @@ INSERT IGNORE INTO reviews (place_id, user_id, rating, body) VALUES
 ('89668341-e3df-41a6-84ac-8357a0f4d842', 'user-legaspi', 4, 'Lots of choices here. The hotdog sandwich is a quick snack win.'),
 ('89668341-e3df-41a6-84ac-8357a0f4d842', 'user-gaano', 5, 'Love the freshly baked waffles! Very student-friendly prices.'),
 ('89668341-e3df-41a6-84ac-8357a0f4d842', 'user-santos', 4, 'Convenient location for a quick bite between classes.');
+
+-- Tres Kusineros (Added May 27)
+INSERT IGNORE INTO places (id, name, slug, type, description, lat, lng, address, hours_json, price_range, photo_urls, contact, submitted_by, status) VALUES
+('8c0b5da7-43af-4c9e-a9f4-574b68d80ef2', 'Tres Kusineros', 'tres-kusineros', 'Carinderia', 'tumira ng tres boom panes', 14.201134, 120.879068, 'Indang, Cavite', '"7:00 AM - 7:00 PM"', 'PHP 50-85', '["https://scontent.fmnl30-3.fna.fbcdn.net/v/t39.30808-6/327980309_495332286113553_6381553398114355545_n.jpg?_nc_cat=101&ccb=1-7&_nc_sid=6ee11a&_nc_ohc=c4KmnQafhJgQ7kNvwEf_yfy&_nc_oc=AdqRZIOYTNiW0URZitF2ENvz6581sqI6EeBq9O5sYfqwUuo0g7U8jwRWIaCzWsQzgLw&_nc_zt=23&_nc_ht=scontent.fmnl30-3.fna&_nc_gid=hQzk9_wuqj4TeDgvTcY3cw&_nc_ss=7b2a8&oh=00_Af548YfQPqen3rJ5L9y_CRNzgtCoTxGek9s-GUy2wbVPnw&oe=6A1CE34A"]', 'Pending contact', 'user-admin', 'approved');
+
+INSERT IGNORE INTO menu_items (place_id, name, category, description, price, is_best_seller, tags) VALUES
+('8c0b5da7-43af-4c9e-a9f4-574b68d80ef2', 'Pork Barbeque', 'Grilled', 'Grilled pork skewers with special sauce.', 50.00, 1, '["pork", "grill", "lunch"]'),
+('8c0b5da7-43af-4c9e-a9f4-574b68d80ef2', 'Chicken Fingers', 'Main Course', 'Breaded crispy chicken strips with gravy.', 75.00, 1, '["chicken", "fried", "lunch"]'),
+('8c0b5da7-43af-4c9e-a9f4-574b68d80ef2', 'Cordon Bleu', 'Specialty', 'Chicken breast wrapped around ham and cheese.', 85.00, 1, '["chicken", "cheese", "special"]');
+
+-- Reviews for Tres Kusineros
+INSERT IGNORE INTO reviews (place_id, user_id, rating, body) VALUES
+('8c0b5da7-43af-4c9e-a9f4-574b68d80ef2', 'user-bongalos', 5, 'The cordon bleu is amazing! One of my favorites in CvSU.'),
+('8c0b5da7-43af-4c9e-a9f4-574b68d80ef2', 'user-gaano', 4, 'Good food and very fast service. Perfect for quick lunch breaks.'),
+('8c0b5da7-43af-4c9e-a9f4-574b68d80ef2', 'user-santos', 5, 'Chicken fingers are crispy and the gravy is delicious.');
