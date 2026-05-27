@@ -107,3 +107,27 @@ INSERT IGNORE INTO menu_items (place_id, name, category, description, price, is_
     ('kokoks-griddle-grill', 'Chicken inasal', 'Grilled', 'Charcoal-grilled chicken served with rice.', 99, TRUE, '["chicken", "grill", "rice meal"]'),
     ('kokoks-griddle-grill', 'Barbecue platter', 'Sharing', 'Skewers for small groups after class.', 199, TRUE, '["barbecue", "sharing", "dinner"]'),
     ('kokoks-griddle-grill', 'Pancit canton', 'Noodles', 'Quick noodle order for merienda.', 85, FALSE, '["noodles", "snack", "merienda"]');
+
+-- Menu items for existing restaurants (Added May 2026)
+INSERT IGNORE INTO menu_items (place_id, name, category, description, price, is_best_seller, tags) VALUES
+('68de0bba-1ddf-4a9a-846f-e6a976908ad6', 'Big Bite Hotdog', 'Quick Snacks', 'Classic 7/11 hotdog in a bun.', 35.00, 1, '["hotdog", "snack", "quick"]'),
+('68de0bba-1ddf-4a9a-846f-e6a976908ad6', 'Slurpee (Medium)', 'Cold Drinks', 'Refreshing frozen carbonated drink.', 39.00, 1, '["drink", "frozen", "sweet"]'),
+('68de0bba-1ddf-4a9a-846f-e6a976908ad6', 'Busog Meal', 'Rice Meals', 'Affordable rice bowl with various toppings.', 49.00, 0, '["rice meal", "budget", "lunch"]'),
+('79d4d290-d0a9-4c61-b03a-b69b210a98b1', 'Beef Pares', 'Rice Meals', 'Tender beef brisket in sweet soy broth.', 55.00, 1, '["beef", "pares", "rice meal"]'),
+('79d4d290-d0a9-4c61-b03a-b69b210a98b1', 'Tokwa’t Baboy', 'Side Dishes', 'Fried tofu and pork in soy-vinegar sauce.', 35.00, 0, '["pork", "tofu", "side"]'),
+('79d4d290-d0a9-4c61-b03a-b69b210a98b1', 'Lugaw with Egg', 'Breakfast', 'Warm rice porridge topped with boiled egg.', 25.00, 1, '["breakfast", "lugaw", "budget"]'),
+('7caa992c-795d-4e64-9d10-6f899ffa9966', 'Special Tapa Silog', 'Silog Meals', 'Home-style beef tapa with rice and egg.', 115.00, 1, '["tapsilog", "breakfast", "beef"]'),
+('7caa992c-795d-4e64-9d10-6f899ffa9966', 'Sizzling Sisig', 'Main Course', 'Crispy chopped pork served on a hot plate.', 149.00, 1, '["sisig", "pork", "dinner"]'),
+('7caa992c-795d-4e64-9d10-6f899ffa9966', 'Chicken Wings (6pcs)', 'Snacks/Sharing', 'Crispy wings with choice of sauce.', 179.00, 0, '["chicken", "wings", "sharing"]'),
+('85df6687-f3f0-4eff-88a9-7bbf770624d3', 'Cheeseburger Meal', 'Burgers', 'Classic cheeseburger with fries and drink.', 155.00, 1, '["burger", "mcdonalds", "meal"]'),
+('85df6687-f3f0-4eff-88a9-7bbf770624d3', '1-pc Chicken McDo', 'Chicken', 'Crispy fried chicken with rice and gravy.', 99.00, 1, '["chicken", "fried", "rice meal"]'),
+('85df6687-f3f0-4eff-88a9-7bbf770624d3', 'Hot Fudge Sundae', 'Desserts', 'Creamy soft serve with hot chocolate fudge.', 55.00, 0, '["dessert", "sweet", "ice cream"]'),
+('926ffa9c-b942-4b7d-864c-80645160526b', 'Okinawa Milktea', 'Milktea', 'Classic roasted brown sugar milktea.', 39.00, 1, '["milktea", "sweet", "iced"]'),
+('926ffa9c-b942-4b7d-864c-80645160526b', 'Dark Chocolate', 'Premium Series', 'Rich and creamy dark chocolate drink.', 49.00, 1, '["chocolate", "iced", "premium"]'),
+('926ffa9c-b942-4b7d-864c-80645160526b', 'Matcha Latte', 'Classic Series', 'Smooth and earthy green tea milk drink.', 39.00, 0, '["matcha", "tea", "iced"]'),
+('c252bb5f-fc2c-424f-8ac6-75424da7498b', 'Pork Adobo', 'Rice Meals', 'Traditional pork adobo with rice.', 45.00, 1, '["adobo", "pork", "budget"]'),
+('c252bb5f-fc2c-424f-8ac6-75424da7498b', 'Ginataang Gulay', 'Vegetables', 'Mixed vegetables in coconut milk.', 30.00, 0, '["veggies", "healthy", "side"]'),
+('c252bb5f-fc2c-424f-8ac6-75424da7498b', 'Fried Fish', 'Rice Meals', 'Crispy fried fish with rice.', 40.00, 1, '["fish", "fried", "budget"]'),
+('cafd3270-2769-4095-a988-8d60ebd78e0d', 'Spanish Latte', 'Coffee', 'Sweet and creamy espresso-based drink.', 145.00, 1, '["coffee", "latte", "espresso"]'),
+('cafd3270-2769-4095-a988-8d60ebd78e0d', 'Carbonara Pasta', 'Pasta', 'Creamy white sauce pasta with bacon bits.', 165.00, 1, '["pasta", "italian", "lunch"]'),
+('cafd3270-2769-4095-a988-8d60ebd78e0d', 'Beef Quesadilla', 'Snacks', 'Grilled tortilla filled with beef and cheese.', 130.00, 0, '["mexican", "snack", "cheese"]');
