@@ -4,8 +4,21 @@ Next.js frontend for the CvSU Indang food discovery platform.
 
 ## Getting Started
 
+To install dependencies, set up environment variables, and initialize the database in one go:
+
 ```bash
-npm install
+npm run setup
+```
+
+Alternatively, to just run the database setup later:
+
+```bash
+npm run db:setup
+```
+
+Then start the development server:
+
+```bash
 npm run dev
 ```
 
@@ -14,6 +27,8 @@ Open [http://localhost:3000](http://localhost:3000).
 ## Scripts
 
 ```bash
+npm run setup    # install + env setup + db import
+npm run db:setup # interactive database import
 npm run dev      # start dev server
 npm run build    # production build
 npm run lint     # run ESLint

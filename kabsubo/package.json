@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "db:setup": "node scripts/setup-db.js",
+    "setup": "npm install && npm run db:setup"
   },
   "dependencies": {
     "lucide-react": "^1.14.0",
