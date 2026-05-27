@@ -57,7 +57,7 @@ npm run setup
 3. **Database Config**: 
    - Either create a MySQL user `kabsubo` with password `kabsubo_dev` in phpMyAdmin,
    - OR edit `backend/db_config.php` to use your XAMPP credentials (usually `root` and no password).
-4. **Frontend**: In your terminal, go to the `kabsubo` folder and run `npm run dev`.
+4. **Frontend**: In your terminal, go to the `kabsubo` folder and run `npm run dev:all`.
 5. **Access**: Open `http://localhost:3000` in your browser.
 
 ---
@@ -104,7 +104,7 @@ NEXT_PUBLIC_KABSUBO_USE_MOCK_API=false
 
 ```bash
 cd kabsubo
-npm run dev
+npm run dev:all
 ```
 
 Open [http://localhost:3000](http://localhost:3000).

@@ -29,7 +29,8 @@ Open [http://localhost:3000](http://localhost:3000).
 ```bash
 npm run setup    # install + env setup + db import
 npm run db:setup # interactive database import
-npm run dev      # start dev server
+npm run dev:all  # start both frontend + backend
+npm run dev      # start dev server only
 npm run build    # production build
 npm run lint     # run ESLint
 ```
